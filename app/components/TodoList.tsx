@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/app/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { PlusIcon, EditIcon, TrashIcon, CheckIcon } from 'lucide-react'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
@@ -182,59 +183,73 @@ export default function TodoList() {
   if (fetchError) return <div>Error loading tasks: {fetchError.message}</div>
 
   return (
-    <div className="max-w-md mx-auto">
-      <form onSubmit={handleAddTask} className="mb-4 flex">
-        <Input
-          type="text"
-          value={newTask}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
-          placeholder="Add a new task"
-          className="mr-2 flex-grow"
-        />
-        <Button type="submit">Add Task</Button>
+    <div className="max-w-4xl mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      <form onSubmit={handleAddTask} className="mb-6">
+        <div className="flex items-center space-x-2">
+          <Input
+            type="text"
+            value={newTask}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
+            placeholder="Add a new task"
+            className="flex-grow"
+          />
+          <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+            <PlusIcon className="w-5 h-5 mr-1" /> Add
+          </Button>
+        </div>
       </form>
-      <ul>
+      <ul className="space-y-3">
         {tasks.map((task: Task) => (
-          <li key={task.id} className="flex items-center mb-2">
-            <input
-              type="checkbox"
-              checked={task.status === 'completed'}
-              onChange={() => handleToggleTask(task)}
-              className="mr-2"
-            />
-            <span className={task.status === 'completed' ? 'line-through' : ''}>
-              {task.title}
-            </span>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleEditTask(task)} className="ml-auto mr-2" variant="outline">
-                  Edit
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-background border-border">
-                <DialogHeader>
-                  <DialogTitle>Edit Task</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleUpdateTask} className="mt-4">
-                  <Input
-                    type="text"
-                    value={editingTask?.title || ''}
-                    onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                    className="mb-4"
-                  />
-                  <Button type="submit">Update Task</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-            <Button
-              onClick={() => handleDeleteTask(task.id)}
-              variant="destructive"
-            >
-              Delete
-            </Button>
+          <li key={task.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={task.status === 'completed'}
+                onChange={() => handleToggleTask(task)}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className={`text-lg ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-800 dark:text-white'}`}>
+                {task.title}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button onClick={() => handleEditTask(task)} variant="outline" size="sm">
+                    <EditIcon className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-white dark:bg-gray-800">
+                  <DialogHeader>
+                    <DialogTitle>Edit Task</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdateTask} className="mt-4 space-y-4">
+                    <Input
+                      type="text"
+                      value={editingTask?.title || ''}
+                      onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
+                      className="w-full"
+                    />
+                    <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
+                      <CheckIcon className="w-4 h-4 mr-2" /> Update Task
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button
+                onClick={() => handleDeleteTask(task.id)}
+                variant="destructive"
+                size="sm"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </Button>
+            </div>
           </li>
         ))}
       </ul>
+      {tasks.length === 0 && (
+        <p className="text-center text-gray-500 dark:text-gray-400 mt-6">No tasks yet. Add one to get started!</p>
+      )}
     </div>
   )
 }
