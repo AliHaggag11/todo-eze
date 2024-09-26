@@ -19,7 +19,6 @@ import { PlusIcon, EditIcon, TrashIcon, CheckIcon } from 'lucide-react'
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
@@ -102,7 +101,7 @@ export default function TodoList() {
     },
     onSuccess: (updatedTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      setIsDialogOpen(false)
+      setEditingTask(null)
       toast({
         title: "Task updated",
         description: `"${updatedTask.title}" has been updated.`,
@@ -161,7 +160,6 @@ export default function TodoList() {
 
   const handleEditTask = (task: Task) => {
     setEditingTask(task)
-    setIsDialogOpen(true)
   }
 
   const handleUpdateTask = async (e: React.FormEvent) => {
