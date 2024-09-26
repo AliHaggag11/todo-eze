@@ -12,9 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/app/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { PlusIcon, EditIcon, TrashIcon, CheckIcon } from 'lucide-react'
+import { PlusIcon, EditIcon, TrashIcon, CheckIcon, XIcon } from 'lucide-react'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
@@ -167,6 +168,7 @@ export default function TodoList() {
     if (editingTask) {
       try {
         await updateTaskMutation.mutateAsync(editingTask)
+        // The dialog will be closed automatically due to the DialogClose component
       } catch (error) {
         console.error('Error in handleUpdateTask:', error)
       }
@@ -218,6 +220,10 @@ export default function TodoList() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-white dark:bg-gray-800">
+                  <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                    <XIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <span className="sr-only">Close</span>
+                  </DialogClose>
                   <DialogHeader>
                     <DialogTitle className="text-gray-900 dark:text-white">Edit Task</DialogTitle>
                   </DialogHeader>
@@ -228,9 +234,11 @@ export default function TodoList() {
                       onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
                       className="w-full text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700"
                     />
-                    <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                      <CheckIcon className="w-4 h-4 mr-2" /> Update Task
-                    </Button>
+                    <DialogClose asChild>
+                      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                        <CheckIcon className="w-4 h-4 mr-2" /> Update Task
+                      </Button>
+                    </DialogClose>
                   </form>
                 </DialogContent>
               </Dialog>
