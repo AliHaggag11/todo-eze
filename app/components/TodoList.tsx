@@ -191,7 +191,7 @@ export default function TodoList() {
             value={newTask}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
             placeholder="Add a new task"
-            className="flex-grow"
+            className="flex-grow text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           />
           <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
             <PlusIcon className="w-5 h-5 mr-1" /> Add
@@ -219,7 +219,7 @@ export default function TodoList() {
                     <EditIcon className="w-4 h-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800">
+                <DialogContent className="bg-white dark:bg-gray-800 mx-4 sm:mx-0">
                   <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
                     <XIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     <span className="sr-only">Close</span>
