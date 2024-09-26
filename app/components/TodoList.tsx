@@ -6,12 +6,14 @@ import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
+import { RealtimeChannel } from '@supabase/supabase-js'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const { tasks, setTasks, addTask, updateTask, deleteTask } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
+  const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null)
 
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks'],
@@ -31,6 +33,30 @@ export default function TodoList() {
       setTasks(data)
     }
   }, [data, setTasks])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('tasks_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
+        console.log('Real-time update:', payload)
+        if (payload.eventType === 'INSERT') {
+          addTask(payload.new as Task)
+        } else if (payload.eventType === 'UPDATE') {
+          updateTask(payload.new as Task)
+        } else if (payload.eventType === 'DELETE') {
+          deleteTask(payload.old.id)
+        }
+      })
+      .subscribe()
+
+    setRealtimeChannel(channel)
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [supabase, addTask, updateTask, deleteTask])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
@@ -55,7 +81,6 @@ export default function TodoList() {
     },
     onSuccess: (newTask) => {
       console.log('onSuccess called with:', newTask)
-      addTask(newTask)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
     onError: (error) => {
@@ -75,8 +100,7 @@ export default function TodoList() {
       if (error) throw error
       return data as Task
     },
-    onSuccess: (updatedTask) => {
-      updateTask(updatedTask)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
   })
@@ -89,8 +113,7 @@ export default function TodoList() {
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: (_, taskId) => {
-      deleteTask(taskId)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
   })
@@ -100,8 +123,7 @@ export default function TodoList() {
     if (newTask.trim()) {
       console.log('Attempting to add task:', newTask)
       try {
-        const result = await addTaskMutation.mutateAsync(newTask.trim())
-        console.log('Task added:', result)
+        await addTaskMutation.mutateAsync(newTask.trim())
         setNewTask('')
       } catch (error) {
         console.error('Error in handleAddTask:', error)
