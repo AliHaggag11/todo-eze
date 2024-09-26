@@ -17,6 +17,7 @@ import {
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
@@ -87,6 +88,7 @@ export default function TodoList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      setIsDialogOpen(false)
     },
   })
 
@@ -121,6 +123,7 @@ export default function TodoList() {
 
   const handleEditTask = (task: Task) => {
     setEditingTask(task)
+    setIsDialogOpen(true)
   }
 
   const handleUpdateTask = async (e: React.FormEvent) => {
@@ -128,7 +131,6 @@ export default function TodoList() {
     if (editingTask) {
       try {
         await updateTaskMutation.mutateAsync(editingTask)
-        setEditingTask(null)
       } catch (error) {
         console.error('Error in handleUpdateTask:', error)
       }
@@ -166,13 +168,13 @@ export default function TodoList() {
             <span className={task.status === 'completed' ? 'line-through' : ''}>
               {task.title}
             </span>
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={() => handleEditTask(task)} className="ml-auto mr-2" variant="outline">
                   Edit
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-background border-border">
                 <DialogHeader>
                   <DialogTitle>Edit Task</DialogTitle>
                 </DialogHeader>
