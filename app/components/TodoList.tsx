@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/app/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import DotPattern from '@/app/components/magicui/dot-pattern'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
@@ -182,59 +183,64 @@ export default function TodoList() {
   if (fetchError) return <div>Error loading tasks: {fetchError.message}</div>
 
   return (
-    <div className="max-w-md mx-auto">
-      <form onSubmit={handleAddTask} className="mb-4 flex">
-        <Input
-          type="text"
-          value={newTask}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
-          placeholder="Add a new task"
-          className="mr-2 flex-grow"
-        />
-        <Button type="submit">Add Task</Button>
-      </form>
-      <ul>
-        {tasks.map((task: Task) => (
-          <li key={task.id} className="flex items-center mb-2">
-            <input
-              type="checkbox"
-              checked={task.status === 'completed'}
-              onChange={() => handleToggleTask(task)}
-              className="mr-2"
-            />
-            <span className={task.status === 'completed' ? 'line-through' : ''}>
-              {task.title}
-            </span>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleEditTask(task)} className="ml-auto mr-2" variant="outline">
-                  Edit
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-background border-border">
-                <DialogHeader>
-                  <DialogTitle>Edit Task</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleUpdateTask} className="mt-4">
-                  <Input
-                    type="text"
-                    value={editingTask?.title || ''}
-                    onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                    className="mb-4"
-                  />
-                  <Button type="submit">Update Task</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-            <Button
-              onClick={() => handleDeleteTask(task.id)}
-              variant="destructive"
-            >
-              Delete
-            </Button>
-          </li>
-        ))}
-      </ul>
+    <div className="relative max-w-md mx-auto min-h-screen">
+      <DotPattern className="absolute inset-0 opacity-30" />
+      <div className="relative z-10 bg-background/80 backdrop-blur-sm p-6 rounded-lg shadow-lg">
+        <form onSubmit={handleAddTask} className="mb-4 flex">
+          <Input
+            type="text"
+            value={newTask}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
+            placeholder="Add a new task"
+            className="mr-2 flex-grow"
+          />
+          <Button type="submit">Add Task</Button>
+        </form>
+        <ul className="space-y-2">
+          {tasks.map((task: Task) => (
+            <li key={task.id} className="flex items-center p-2 bg-background/60 rounded-md">
+              <input
+                type="checkbox"
+                checked={task.status === 'completed'}
+                onChange={() => handleToggleTask(task)}
+                className="mr-2" 
+              />
+              <span className={`flex-grow ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                {task.title}
+              </span>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => handleEditTask(task)} className="ml-2" variant="outline" size="sm">
+                    Edit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-background border-border">
+                  <DialogHeader>
+                    <DialogTitle>Edit Task</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdateTask} className="mt-4">
+                    <Input
+                      type="text"
+                      value={editingTask?.title || ''}
+                      onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
+                      className="mb-4"
+                    />
+                    <Button type="submit">Update Task</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button
+                onClick={() => handleDeleteTask(task.id)}
+                variant="destructive"
+                size="sm"
+                className="ml-2"
+              >
+                Delete
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }
