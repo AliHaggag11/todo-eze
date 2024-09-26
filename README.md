@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Collaborative Todo List
+
+## Project Overview
+
+This project is a real-time collaborative todo list application built with Next.js, React, and Supabase. It allows users to create, manage, and share tasks in real-time, making it ideal for team collaboration or personal task management.
+
+## Features
+
+- User authentication with GitHub
+- Real-time task updates
+- Create, read, update, and delete (CRUD) operations for tasks
+- Responsive design for mobile and desktop
+- Dark mode support
+
+## Tech Stack
+
+### Frontend
+- **Next.js**: A React framework for building server-side rendered and statically generated web applications.
+- **React**: A JavaScript library for building user interfaces.
+- **TypeScript**: A typed superset of JavaScript that compiles to plain JavaScript.
+- **Tailwind CSS**: A utility-first CSS framework for rapidly building custom user interfaces.
+- **shadcn/ui**: A collection of re-usable components built with Radix UI and Tailwind CSS.
+
+### Backend
+- **Supabase**: An open-source Firebase alternative providing a PostgreSQL database, authentication, instant APIs, and real-time subscriptions.
+
+### State Management
+- **React Query**: A library for managing, caching, and syncing asynchronous and remote data in React.
+- **Zustand**: A small, fast, and scalable state management solution for React.
+
+### Development Tools
+- **ESLint**: A static code analysis tool for identifying problematic patterns in JavaScript code.
+- **Prettier**: An opinionated code formatter to ensure consistent code style.
+
+## Why This Stack?
+
+1. **Next.js**: Chosen for its server-side rendering capabilities, optimized performance, and excellent developer experience. It provides a solid foundation for building scalable React applications.
+
+2. **React**: The most popular JavaScript library for building user interfaces, offering a component-based architecture and a vast ecosystem of tools and libraries.
+
+3. **TypeScript**: Adds static typing to JavaScript, improving code quality, catching errors early, and enhancing developer productivity through better tooling support.
+
+4. **Tailwind CSS**: Enables rapid UI development with its utility-first approach, resulting in faster development cycles and easier maintenance of styles.
+
+5. **shadcn/ui**: Provides a set of accessible and customizable UI components, speeding up development and ensuring a consistent look and feel across the application.
+
+6. **Supabase**: Offers a powerful backend-as-a-service solution with real-time capabilities, simplifying database management, authentication, and API development.
+
+7. **React Query**: Simplifies data fetching, caching, and state management for remote data, improving application performance and user experience.
+
+8. **Zustand**: A lightweight state management solution that's easy to use and integrate, perfect for managing local UI state.
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/collaborative-todo-list.git
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. Install dependencies:
+   ```bash
+   cd collaborative-todo-list
+   npm install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and add your Supabase credentials:
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-## Learn More
+## Contributing
 
-To learn more about Next.js, take a look at the following resources:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

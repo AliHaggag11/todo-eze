@@ -4,8 +4,6 @@ import { cn } from "@/lib/utils"
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  // You can add custom props here if needed
-  // For now, we'll add a dummy prop to avoid the linting error
   customProp?: string;
 }
 
