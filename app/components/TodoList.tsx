@@ -13,7 +13,7 @@ export default function TodoList() {
   const { tasks, setTasks, addTask, updateTask, deleteTask } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
-  const [, setRealtimeChannel] = useState<RealtimeChannel | null>(null)
+
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks'],
     queryFn: async () => {
@@ -39,34 +39,36 @@ export default function TodoList() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
         console.log('Real-time update:', payload)
         if (payload.eventType === 'INSERT') {
+          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => [...(oldData || []), payload.new as Task])
           addTask(payload.new as Task)
         } else if (payload.eventType === 'UPDATE') {
+          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => 
+            oldData?.map(task => task.id === payload.new.id ? payload.new as Task : task) || []
+          )
           updateTask(payload.new as Task)
         } else if (payload.eventType === 'DELETE') {
+          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => 
+            oldData?.filter(task => task.id !== payload.old.id) || []
+          )
           deleteTask(payload.old.id)
         }
       })
       .subscribe()
 
-    setRealtimeChannel(channel)
-
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      supabase.removeChannel(channel)
     }
-  }, [supabase, addTask, updateTask, deleteTask])
+  }, [supabase, queryClient, addTask, updateTask, deleteTask])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No user found')
       
-      console.log('Attempting to add task:', { title, user_id: user.id })
-      
+      const newTask = { title, status: 'active' as const, user_id: user.id }
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ title, status: 'active', user_id: user.id })
+        .insert(newTask)
         .select()
         .single()
       
@@ -78,13 +80,24 @@ export default function TodoList() {
       console.log('Task added successfully:', data)
       return data as Task
     },
-    onSuccess: (newTask) => {
-      console.log('onSuccess called with:', newTask)
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    onMutate: async (newTaskTitle) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks'] })
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks'])
+      const tempTask: Task = {
+        id: Date.now().toString(),
+        title: newTaskTitle,
+        status: 'active',
+        user_id: 'temp',
+        created_at: new Date().toISOString()
+      }
+      queryClient.setQueryData<Task[]>(['tasks'], old => [...(old || []), tempTask])
+      return { previousTasks }
     },
-    onError: (error) => {
-      console.error('Error in addTaskMutation:', error)
-      // You might want to show an error message to the user here
+    onError: (err, newTask, context) => {
+      queryClient.setQueryData(['tasks'], context?.previousTasks)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
   })
 
@@ -99,7 +112,18 @@ export default function TodoList() {
       if (error) throw error
       return data as Task
     },
-    onSuccess: () => {
+    onMutate: async (updatedTask) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks'] })
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks'])
+      queryClient.setQueryData<Task[]>(['tasks'], old => 
+        old?.map(task => task.id === updatedTask.id ? updatedTask : task) || []
+      )
+      return { previousTasks }
+    },
+    onError: (err, updatedTask, context) => {
+      queryClient.setQueryData(['tasks'], context?.previousTasks)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
   })
@@ -112,7 +136,18 @@ export default function TodoList() {
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: () => {
+    onMutate: async (deletedTaskId) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks'] })
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks'])
+      queryClient.setQueryData<Task[]>(['tasks'], old => 
+        old?.filter(task => task.id !== deletedTaskId) || []
+      )
+      return { previousTasks }
+    },
+    onError: (err, deletedTaskId, context) => {
+      queryClient.setQueryData(['tasks'], context?.previousTasks)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
   })
@@ -120,13 +155,11 @@ export default function TodoList() {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim()) {
-      console.log('Attempting to add task:', newTask)
       try {
         await addTaskMutation.mutateAsync(newTask.trim())
         setNewTask('')
       } catch (error) {
         console.error('Error in handleAddTask:', error)
-        // You might want to show an error message to the user here
       }
     }
   }
