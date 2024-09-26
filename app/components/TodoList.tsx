@@ -6,12 +6,14 @@ import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
+import { useRouter } from 'next/navigation'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
+  const router = useRouter()
 
   const fetchTasks = useCallback(async () => {
     const { data, error } = await supabase.from('tasks').select('*')
@@ -115,11 +117,20 @@ export default function TodoList() {
     deleteTaskMutation.mutate(taskId)
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {(error as Error).message}</div>
 
   return (
     <div className="max-w-md mx-auto mt-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Todo List</h2>
+        <Button onClick={handleLogout} variant="outline">Logout</Button>
+      </div>
       <form onSubmit={handleAddTask} className="mb-4 flex">
         <Input
           type="text"
