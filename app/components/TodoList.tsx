@@ -60,6 +60,7 @@ export default function TodoList() {
     },
     onError: (error) => {
       console.error('Error in addTaskMutation:', error)
+      // You might want to show an error message to the user here
     },
   })
 
@@ -104,6 +105,7 @@ export default function TodoList() {
         setNewTask('')
       } catch (error) {
         console.error('Error in handleAddTask:', error)
+        // You might want to show an error message to the user here
       }
     }
   }
