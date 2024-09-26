@@ -6,7 +6,6 @@ import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
-import { RealtimeChannel } from '@supabase/supabase-js'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
