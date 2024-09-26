@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Session, SupabaseClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/database.types'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 
@@ -10,12 +11,12 @@ const queryClient = new QueryClient()
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null)
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
+  const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null)
 
   useEffect(() => {
     const initSupabase = async () => {
       const { createClientComponentClient } = await import('@supabase/auth-helpers-nextjs')
-      const supabaseInstance = createClientComponentClient()
+      const supabaseInstance = createClientComponentClient<Database>()
       setSupabase(supabaseInstance)
 
       const { data: { session } } = await supabaseInstance.auth.getSession()
