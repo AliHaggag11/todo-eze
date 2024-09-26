@@ -6,9 +6,17 @@ import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/app/components/ui/dialog"
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
@@ -111,6 +119,22 @@ export default function TodoList() {
     updateTaskMutation.mutate({ ...task, status: task.status === 'completed' ? 'active' : 'completed' })
   }
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+  }
+
+  const handleUpdateTask = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingTask) {
+      try {
+        await updateTaskMutation.mutateAsync(editingTask)
+        setEditingTask(null)
+      } catch (error) {
+        console.error('Error in handleUpdateTask:', error)
+      }
+    }
+  }
+
   const handleDeleteTask = (taskId: string) => {
     deleteTaskMutation.mutate(taskId)
   }
@@ -142,9 +166,29 @@ export default function TodoList() {
             <span className={task.status === 'completed' ? 'line-through' : ''}>
               {task.title}
             </span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleEditTask(task)} className="ml-auto mr-2" variant="outline">
+                  Edit
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Task</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleUpdateTask} className="mt-4">
+                  <Input
+                    type="text"
+                    value={editingTask?.title || ''}
+                    onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
+                    className="mb-4"
+                  />
+                  <Button type="submit">Update Task</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
             <Button
               onClick={() => handleDeleteTask(task.id)}
-              className="ml-auto"
               variant="destructive"
             >
               Delete
