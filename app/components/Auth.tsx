@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from '@/app/components/ui/button'
+import { Database } from '@/lib/database.types'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -10,10 +11,11 @@ export default function Auth() {
     try {
       setLoading(true)
       setError(null)
+      const supabase = createClientComponentClient<Database>()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       })
       if (error) throw error

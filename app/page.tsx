@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Session, SupabaseClient } from '@supabase/supabase-js'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Session } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
@@ -11,28 +12,29 @@ const queryClient = new QueryClient()
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null)
-  const [supabase, setSupabase] = useState<SupabaseClient<Database> | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const initSupabase = async () => {
-      const { createClientComponentClient } = await import('@supabase/auth-helpers-nextjs')
-      const supabaseInstance = createClientComponentClient<Database>()
-      setSupabase(supabaseInstance)
+    const supabase = createClientComponentClient<Database>()
 
-      const { data: { session } } = await supabaseInstance.auth.getSession()
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
+      setIsLoading(false)
+    })
 
-      const { data: { subscription } } = supabaseInstance.auth.onAuthStateChange((_event, session) => {
-        setSession(session)
-      })
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setIsLoading(false)
+    })
 
-      return () => subscription.unsubscribe()
-    }
-
-    initSupabase()
+    return () => subscription.unsubscribe()
   }, [])
 
-  if (!supabase) return null
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
