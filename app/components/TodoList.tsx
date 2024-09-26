@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/app/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
@@ -21,6 +22,7 @@ export default function TodoList() {
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
+  const { toast } = useToast()
 
   const fetchTasks = useCallback(async () => {
     const { data, error } = await supabase.from('tasks').select('*')
@@ -70,8 +72,19 @@ export default function TodoList() {
       if (error) throw error
       return data as Task
     },
-    onSuccess: () => {
+    onSuccess: (newTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      toast({
+        title: "Task added",
+        description: `"${newTask.title}" has been added to your list.`,
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add task. Please try again.",
+        variant: "destructive",
+      })
     },
   })
 
@@ -86,9 +99,20 @@ export default function TodoList() {
       if (error) throw error
       return data as Task
     },
-    onSuccess: () => {
+    onSuccess: (updatedTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       setIsDialogOpen(false)
+      toast({
+        title: "Task updated",
+        description: `"${updatedTask.title}" has been updated.`,
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      })
     },
   })
 
@@ -100,8 +124,20 @@ export default function TodoList() {
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: () => {
+    onSuccess: (_, taskId) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      const deletedTask = tasks.find(task => task.id === taskId)
+      toast({
+        title: "Task deleted",
+        description: deletedTask ? `"${deletedTask.title}" has been deleted.` : "Task has been deleted.",
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete task. Please try again.",
+        variant: "destructive",
+      })
     },
   })
 
@@ -118,7 +154,8 @@ export default function TodoList() {
   }
 
   const handleToggleTask = (task: Task) => {
-    updateTaskMutation.mutate({ ...task, status: task.status === 'completed' ? 'active' : 'completed' })
+    const newStatus = task.status === 'completed' ? 'active' : 'completed'
+    updateTaskMutation.mutate({ ...task, status: newStatus })
   }
 
   const handleEditTask = (task: Task) => {
