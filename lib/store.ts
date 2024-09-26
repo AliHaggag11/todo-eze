@@ -11,7 +11,7 @@ interface TodoStore {
 
 export const useTodoStore = create<TodoStore>((set) => ({
   tasks: [],
-  setTasks: (tasks) => set((state) => {
+  setTasks: (tasks) => set(() => {
     console.log('Setting tasks:', tasks);
     return { tasks };
   }),
