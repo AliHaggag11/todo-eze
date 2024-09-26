@@ -34,9 +34,9 @@ export default function Auth() {
   }
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-900">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-900 overflow-hidden px-4 sm:px-6 lg:px-8">
       <Ripple className="absolute inset-0" />
-      <div className="relative z-10 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md px-4 py-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Welcome to Collaborative Todo</h2>
         <Button 
           onClick={handleLogin} 
@@ -58,7 +58,7 @@ export default function Auth() {
             </span>
           )}
         </Button>
-        {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
+        {error && <p className="text-red-500 mt-4 text-center text-sm">{error}</p>}
       </div>
     </div>
   )
