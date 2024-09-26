@@ -8,6 +8,7 @@ import { Database } from '@/lib/database.types'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import { Button } from '@/app/components/ui/button'
+import ServiceWorkerRegistration from './components/ServiceWorkerRegistration'
 
 const queryClient = new QueryClient()
 
@@ -42,6 +43,7 @@ export default function Home() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ServiceWorkerRegistration />
       {!session ? (
         <Auth />
       ) : (
