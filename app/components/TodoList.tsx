@@ -13,8 +13,7 @@ export default function TodoList() {
   const { tasks, setTasks, addTask, updateTask, deleteTask } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
-  const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null)
-
+  const [, setRealtimeChannel] = useState<RealtimeChannel | null>(null)
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks'],
     queryFn: async () => {
