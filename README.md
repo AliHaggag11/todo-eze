@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is a real-time collaborative todo list application built with Next.js, React, and Supabase. It allows users to create, manage, and share tasks in real-time, making it ideal for team collaboration or personal task management.
+This project is a real-time collaborative todo list application built with Next.js, React, and Supabase. It allows users to create, manage, and share tasks in real-time, making it ideal for team collaboration or personal task management. The application is also a Progressive Web App (PWA), providing an app-like experience on supported devices.
 
 ## Features
 
@@ -11,6 +11,7 @@ This project is a real-time collaborative todo list application built with Next.
 - Create, read, update, and delete (CRUD) operations for tasks
 - Responsive design for mobile and desktop
 - Dark mode support
+- Progressive Web App (PWA) functionality
 
 ## Tech Stack
 
@@ -27,6 +28,10 @@ This project is a real-time collaborative todo list application built with Next.
 ### State Management
 - **React Query**: A library for managing, caching, and syncing asynchronous and remote data in React.
 - **Zustand**: A small, fast, and scalable state management solution for React.
+
+### PWA
+- **Service Worker**: For offline functionality and caching.
+- **Web Manifest**: For installable PWA experience.
 
 ### Development Tools
 - **ESLint**: A static code analysis tool for identifying problematic patterns in JavaScript code.
@@ -76,6 +81,11 @@ This project is a real-time collaborative todo list application built with Next.
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## PWA Features
+
+- **Installable**: Users can install the app on their devices for quick access.
+- **App-like Experience**: The PWA provides a native app-like experience on supported devices.
 
 ## Contributing
 
