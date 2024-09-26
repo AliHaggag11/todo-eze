@@ -7,16 +7,16 @@ import { Session } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
+import { Button } from '@/app/components/ui/button'
 
 const queryClient = new QueryClient()
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
-    const supabase = createClientComponentClient<Database>()
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setIsLoading(false)
@@ -30,7 +30,11 @@ export default function Home() {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabase.auth])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -39,8 +43,20 @@ export default function Home() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center my-8">Collaborative Todo List</h1>
-        {!session ? <Auth /> : <TodoList />}
+        {!session ? (
+          <>
+            <h1 className="text-3xl font-bold text-center my-8">Collaborative Todo List</h1>
+            <Auth />
+          </>
+        ) : (
+          <>
+            <div className="flex justify-between items-center my-8">
+              <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
+              <Button onClick={handleLogout} variant="outline">Logout</Button>
+            </div>
+            <TodoList />
+          </>
+        )}
       </div>
     </QueryClientProvider>
   )

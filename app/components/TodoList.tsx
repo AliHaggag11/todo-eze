@@ -6,14 +6,12 @@ import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
-import { useRouter } from 'next/navigation'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
-  const router = useRouter()
 
   const fetchTasks = useCallback(async () => {
     const { data, error } = await supabase.from('tasks').select('*')
@@ -117,53 +115,40 @@ export default function TodoList() {
     deleteTaskMutation.mutate(taskId)
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>Error: {(error as Error).message}</div>
-
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-end mb-8">
-        <Button onClick={handleLogout} variant="outline">Logout</Button>
-      </div>
-      <div className="max-w-md mx-auto">
-        <form onSubmit={handleAddTask} className="mb-4 flex">
-          <Input
-            type="text"
-            value={newTask}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
-            placeholder="Add a new task"
-            className="mr-2 flex-grow"
-          />
-          <Button type="submit">Add Task</Button>
-        </form>
-        <ul>
-          {tasks.map((task: Task) => (
-            <li key={task.id} className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                checked={task.status === 'completed'}
-                onChange={() => handleToggleTask(task)}
-                className="mr-2"
-              />
-              <span className={task.status === 'completed' ? 'line-through' : ''}>
-                {task.title}
-              </span>
-              <Button
-                onClick={() => handleDeleteTask(task.id)}
-                className="ml-auto"
-                variant="destructive"
-              >
-                Delete
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="max-w-md mx-auto">
+      <form onSubmit={handleAddTask} className="mb-4 flex">
+        <Input
+          type="text"
+          value={newTask}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
+          placeholder="Add a new task"
+          className="mr-2 flex-grow"
+        />
+        <Button type="submit">Add Task</Button>
+      </form>
+      <ul>
+        {tasks.map((task: Task) => (
+          <li key={task.id} className="flex items-center mb-2">
+            <input
+              type="checkbox"
+              checked={task.status === 'completed'}
+              onChange={() => handleToggleTask(task)}
+              className="mr-2"
+            />
+            <span className={task.status === 'completed' ? 'line-through' : ''}>
+              {task.title}
+            </span>
+            <Button
+              onClick={() => handleDeleteTask(task.id)}
+              className="ml-auto"
+              variant="destructive"
+            >
+              Delete
+            </Button>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
