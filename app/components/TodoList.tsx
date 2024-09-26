@@ -221,7 +221,7 @@ export default function TodoList() {
                 </DialogTrigger>
                 <DialogContent className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg max-w-md w-full mx-auto">
                   <DialogClose className="absolute right-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                    <XIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <XIcon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                     <span className="sr-only">Close</span>
                   </DialogClose>
                   <DialogHeader className="mb-4">
