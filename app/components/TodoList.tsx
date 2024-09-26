@@ -219,23 +219,23 @@ export default function TodoList() {
                     <EditIcon className="w-4 h-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 mx-4 sm:mx-0">
-                  <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                <DialogContent className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg max-w-md w-full mx-auto">
+                  <DialogClose className="absolute right-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
                     <XIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     <span className="sr-only">Close</span>
                   </DialogClose>
-                  <DialogHeader>
-                    <DialogTitle className="text-gray-900 dark:text-white">Edit Task</DialogTitle>
+                  <DialogHeader className="mb-4">
+                    <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">Edit Task</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleUpdateTask} className="mt-4 space-y-4">
+                  <form onSubmit={handleUpdateTask} className="space-y-4">
                     <Input
                       type="text"
                       value={editingTask?.title || ''}
                       onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                      className="w-full text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700"
+                      className="w-full text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                     />
                     <DialogClose asChild>
-                      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md py-2 transition duration-200 ease-in-out">
                         <CheckIcon className="w-4 h-4 mr-2" /> Update Task
                       </Button>
                     </DialogClose>
