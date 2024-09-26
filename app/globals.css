@@ -23,6 +23,10 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
+
+  --toast-background: 0 0% 100%;
+  --toast-foreground: 222.2 84% 4.9%;
+  --toast-border: 214.3 31.8% 91.4%;
 }
 
 .dark {
@@ -45,6 +49,9 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
+  --toast-background: 222.2 84% 4.9%;
+  --toast-foreground: 210 40% 98%;
+  --toast-border: 217.2 32.6% 17.5%;
 }
 
 @layer base {
@@ -74,4 +81,11 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.ToastRoot {
+  background-color: hsl(var(--toast-background));
+  color: hsl(var(--toast-foreground));
+  border-color: hsl(var(--toast-border));
+  opacity: 1; /* Make toasts opaque */
 }
