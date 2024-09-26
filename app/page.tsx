@@ -37,27 +37,22 @@ export default function Home() {
   }
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div className="flex items-center justify-center h-screen">Loading...</div>
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="container mx-auto px-4">
-        {!session ? (
-          <>
-            <h1 className="text-3xl font-bold text-center my-8">Collaborative Todo List</h1>
-            <Auth />
-          </>
-        ) : (
-          <>
-            <div className="flex justify-between items-center my-8">
-              <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
-              <Button onClick={handleLogout} variant="outline">Logout</Button>
-            </div>
-            <TodoList />
-          </>
-        )}
-      </div>
+      {!session ? (
+        <Auth />
+      ) : (
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center my-8">
+            <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
+            <Button onClick={handleLogout} variant="outline">Logout</Button>
+          </div>
+          <TodoList />
+        </div>
+      )}
     </QueryClientProvider>
   )
 }
