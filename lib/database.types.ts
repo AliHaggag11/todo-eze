@@ -12,33 +12,24 @@ export interface Database {
       tasks: {
         Row: {
           id: string
-          title: string
-          description: string | null
-          status: 'active' | 'completed'
           created_at: string
-          updated_at: string
-          created_by: string | null
-          assigned_to: string | null
+          title: string
+          status: 'active' | 'completed'
+          user_id: string
         }
         Insert: {
           id?: string
-          title: string
-          description?: string | null
-          status?: 'active' | 'completed'
           created_at?: string
-          updated_at?: string
-          created_by?: string | null
-          assigned_to?: string | null
+          title: string
+          status?: 'active' | 'completed'
+          user_id: string
         }
         Update: {
           id?: string
-          title?: string
-          description?: string | null
-          status?: 'active' | 'completed'
           created_at?: string
-          updated_at?: string
-          created_by?: string | null
-          assigned_to?: string | null
+          title?: string
+          status?: 'active' | 'completed'
+          user_id?: string
         }
       }
     }

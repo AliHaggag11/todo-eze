@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useTodoStore } from '@/lib/store'
 import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
+import { Database } from '@/lib/database.types'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const { tasks, setTasks, addTask, updateTask, deleteTask } = useTodoStore()
   const queryClient = useQueryClient()
+  const supabase = createClientComponentClient<Database>()
 
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks'],
     queryFn: async () => {
       const { data, error } = await supabase.from('tasks').select('*')
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching tasks:', error)
+        throw error
+      }
+      console.log('Fetched tasks:', data)
       return data as Task[]
     },
   })
@@ -28,17 +34,27 @@ export default function TodoList() {
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('No user found')
+      
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ title, status: 'active' })
+        .insert({ title, status: 'active', user_id: user.id })
         .select()
         .single()
-      if (error) throw error
+      if (error) {
+        console.error('Error adding task:', error)
+        throw error
+      }
+      console.log('Added task:', data)
       return data as Task
     },
     onSuccess: (newTask) => {
       addTask(newTask)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+    onError: (error) => {
+      console.error('Error in addTaskMutation:', error)
     },
   })
 
@@ -61,7 +77,10 @@ export default function TodoList() {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
-      const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId)
       if (error) throw error
     },
     onSuccess: (_, taskId) => {
@@ -70,11 +89,15 @@ export default function TodoList() {
     },
   })
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim()) {
-      addTaskMutation.mutate(newTask.trim())
-      setNewTask('')
+      try {
+        await addTaskMutation.mutateAsync(newTask.trim())
+        setNewTask('')
+      } catch (error) {
+        console.error('Error in handleAddTask:', error)
+      }
     }
   }
 
