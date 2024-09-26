@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "next build"
+    "vercel-build": "next build && next export"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",
