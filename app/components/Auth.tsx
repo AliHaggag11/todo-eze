@@ -32,7 +32,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen">
+    <div className="flex flex-col justify-center items-center">
       <Button onClick={handleLogin} disabled={loading}>
         {loading ? 'Loading...' : 'Sign in with GitHub'}
       </Button>

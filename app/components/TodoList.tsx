@@ -126,9 +126,8 @@ export default function TodoList() {
   if (error) return <div>Error: {(error as Error).message}</div>
 
   return (
-    <div className="max-w-4xl mx-auto mt-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
+    <div className="max-w-4xl mx-auto">
+      <div className="flex justify-end mb-8">
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
       <div className="max-w-md mx-auto">

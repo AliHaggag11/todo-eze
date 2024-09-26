@@ -39,6 +39,7 @@ export default function Home() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="container mx-auto px-4">
+        <h1 className="text-3xl font-bold text-center my-8">Collaborative Todo List</h1>
         {!session ? <Auth /> : <TodoList />}
       </div>
     </QueryClientProvider>
