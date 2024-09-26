@@ -19,7 +19,7 @@ export default function TodoList() {
     return data as Task[]
   }, [supabase])
 
-  const { data, isLoading, error } = useQuery<Task[]>({
+  const { data, isLoading, error } = useQuery<Task[], Error>({
     queryKey: ['tasks'],
     queryFn: fetchTasks,
   })
@@ -114,6 +114,9 @@ export default function TodoList() {
   const handleDeleteTask = (taskId: string) => {
     deleteTaskMutation.mutate(taskId)
   }
+
+  if (isLoading) return <div>Loading tasks...</div>
+  if (error) return <div>Error loading tasks: {error.message}</div>
 
   return (
     <div className="max-w-md mx-auto">
