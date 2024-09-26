@@ -213,22 +213,22 @@ export default function TodoList() {
             <div className="flex items-center space-x-2">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button onClick={() => handleEditTask(task)} variant="outline" size="sm">
+                  <Button onClick={() => handleEditTask(task)} variant="outline" size="sm" className="text-gray-700 dark:text-gray-300">
                     <EditIcon className="w-4 h-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-white dark:bg-gray-800">
                   <DialogHeader>
-                    <DialogTitle>Edit Task</DialogTitle>
+                    <DialogTitle className="text-gray-900 dark:text-white">Edit Task</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleUpdateTask} className="mt-4 space-y-4">
                     <Input
                       type="text"
                       value={editingTask?.title || ''}
                       onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                      className="w-full"
+                      className="w-full text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700"
                     />
-                    <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
+                    <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
                       <CheckIcon className="w-4 h-4 mr-2" /> Update Task
                     </Button>
                   </form>
