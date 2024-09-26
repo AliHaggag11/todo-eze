@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "A real-time collaborative todo list application",
   manifest: "/manifest.json",
   themeColor: "#000000",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
 export default function RootLayout({
@@ -20,6 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+      </head>
       <body className={inter.className}>
         {children}
         <Toaster />
