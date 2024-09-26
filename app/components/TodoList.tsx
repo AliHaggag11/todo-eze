@@ -37,19 +37,24 @@ export default function TodoList() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No user found')
       
+      console.log('Attempting to add task:', { title, user_id: user.id })
+      
       const { data, error } = await supabase
         .from('tasks')
         .insert({ title, status: 'active', user_id: user.id })
         .select()
         .single()
+      
       if (error) {
         console.error('Error adding task:', error)
         throw error
       }
-      console.log('Added task:', data)
+      
+      console.log('Task added successfully:', data)
       return data as Task
     },
     onSuccess: (newTask) => {
+      console.log('onSuccess called with:', newTask)
       addTask(newTask)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
@@ -92,8 +97,10 @@ export default function TodoList() {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim()) {
+      console.log('Attempting to add task:', newTask)
       try {
-        await addTaskMutation.mutateAsync(newTask.trim())
+        const result = await addTaskMutation.mutateAsync(newTask.trim())
+        console.log('Task added:', result)
         setNewTask('')
       } catch (error) {
         console.error('Error in handleAddTask:', error)
