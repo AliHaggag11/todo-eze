@@ -11,21 +11,28 @@ const queryClient = new QueryClient()
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null)
-  const supabase = createClientComponentClient()
+  const [supabase, setSupabase] = useState<any>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
+    const initSupabase = async () => {
+      const { createClientComponentClient } = await import('@supabase/auth-helpers-nextjs')
+      const supabaseInstance = createClientComponentClient()
+      setSupabase(supabaseInstance)
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { session } } = await supabaseInstance.auth.getSession()
       setSession(session)
-    })
 
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
+      const { data: { subscription } } = supabaseInstance.auth.onAuthStateChange((_event, session) => {
+        setSession(session)
+      })
+
+      return () => subscription.unsubscribe()
+    }
+
+    initSupabase()
+  }, [])
+
+  if (!supabase) return null
 
   return (
     <QueryClientProvider client={queryClient}>
