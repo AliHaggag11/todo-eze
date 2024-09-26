@@ -126,43 +126,45 @@ export default function TodoList() {
   if (error) return <div>Error: {(error as Error).message}</div>
 
   return (
-    <div className="max-w-md mx-auto mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Todo List</h2>
+    <div className="max-w-4xl mx-auto mt-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
         <Button onClick={handleLogout} variant="outline">Logout</Button>
       </div>
-      <form onSubmit={handleAddTask} className="mb-4 flex">
-        <Input
-          type="text"
-          value={newTask}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
-          placeholder="Add a new task"
-          className="mr-2 flex-grow"
-        />
-        <Button type="submit">Add Task</Button>
-      </form>
-      <ul>
-        {tasks.map((task: Task) => (
-          <li key={task.id} className="flex items-center mb-2">
-            <input
-              type="checkbox"
-              checked={task.status === 'completed'}
-              onChange={() => handleToggleTask(task)}
-              className="mr-2"
-            />
-            <span className={task.status === 'completed' ? 'line-through' : ''}>
-              {task.title}
-            </span>
-            <Button
-              onClick={() => handleDeleteTask(task.id)}
-              className="ml-auto"
-              variant="destructive"
-            >
-              Delete
-            </Button>
-          </li>
-        ))}
-      </ul>
+      <div className="max-w-md mx-auto">
+        <form onSubmit={handleAddTask} className="mb-4 flex">
+          <Input
+            type="text"
+            value={newTask}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
+            placeholder="Add a new task"
+            className="mr-2 flex-grow"
+          />
+          <Button type="submit">Add Task</Button>
+        </form>
+        <ul>
+          {tasks.map((task: Task) => (
+            <li key={task.id} className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                checked={task.status === 'completed'}
+                onChange={() => handleToggleTask(task)}
+                className="mr-2"
+              />
+              <span className={task.status === 'completed' ? 'line-through' : ''}>
+                {task.title}
+              </span>
+              <Button
+                onClick={() => handleDeleteTask(task.id)}
+                className="ml-auto"
+                variant="destructive"
+              >
+                Delete
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }
