@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useTodoStore } from '@/lib/store'
@@ -9,15 +9,15 @@ import { Database } from '@/lib/database.types'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
-  const { tasks, setTasks, addTask, updateTask, deleteTask } = useTodoStore()
+  const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     const { data, error } = await supabase.from('tasks').select('*')
     if (error) throw error
     return data as Task[]
-  }
+  }, [supabase])
 
   const { data, isLoading, error } = useQuery<Task[]>({
     queryKey: ['tasks'],
@@ -44,7 +44,7 @@ export default function TodoList() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [supabase, setTasks])
+  }, [supabase, setTasks, fetchTasks])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
