@@ -33,31 +33,50 @@ export default function TodoList() {
   }, [data, setTasks])
 
   useEffect(() => {
+    console.log('Setting up real-time subscription');
     const channel = supabase
       .channel('tasks_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
-        console.log('Real-time update:', payload)
+        console.log('Real-time update received:', payload);
         if (payload.eventType === 'INSERT') {
-          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => [...(oldData || []), payload.new as Task])
-          addTask(payload.new as Task)
+          console.log('Inserting new task');
+          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => {
+            const newData = [...(oldData || []), payload.new as Task];
+            console.log('Updated tasks after insert:', newData);
+            return newData;
+          });
+          addTask(payload.new as Task);
         } else if (payload.eventType === 'UPDATE') {
-          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => 
-            oldData?.map(task => task.id === payload.new.id ? payload.new as Task : task) || []
-          )
-          updateTask(payload.new as Task)
+          console.log('Updating task');
+          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => {
+            const newData = oldData?.map(task => task.id === payload.new.id ? payload.new as Task : task) || [];
+            console.log('Updated tasks after update:', newData);
+            return newData;
+          });
+          updateTask(payload.new as Task);
         } else if (payload.eventType === 'DELETE') {
-          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => 
-            oldData?.filter(task => task.id !== payload.old.id) || []
-          )
-          deleteTask(payload.old.id)
+          console.log('Deleting task');
+          queryClient.setQueryData<Task[]>(['tasks'], (oldData) => {
+            const newData = oldData?.filter(task => task.id !== payload.old.id) || [];
+            console.log('Updated tasks after delete:', newData);
+            return newData;
+          });
+          deleteTask(payload.old.id);
         }
       })
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase, queryClient, addTask, updateTask, deleteTask])
+      console.log('Removing real-time subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient, addTask, updateTask, deleteTask]);
+
+  useEffect(() => {
+    console.log('Tasks updated:', tasks);
+  }, [tasks]);
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {

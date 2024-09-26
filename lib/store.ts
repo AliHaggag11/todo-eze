@@ -11,16 +11,26 @@ interface TodoStore {
 
 export const useTodoStore = create<TodoStore>((set) => ({
   tasks: [],
-  setTasks: (tasks) => set({ tasks }),
-  addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
-  updateTask: (updatedTask) =>
-    set((state) => ({
+  setTasks: (tasks) => set((state) => {
+    console.log('Setting tasks:', tasks);
+    return { tasks };
+  }),
+  addTask: (task) => set((state) => {
+    console.log('Adding task:', task);
+    return { tasks: [...state.tasks, task] };
+  }),
+  updateTask: (updatedTask) => set((state) => {
+    console.log('Updating task:', updatedTask);
+    return {
       tasks: state.tasks.map((task) =>
         task.id === updatedTask.id ? updatedTask : task
       ),
-    })),
-  deleteTask: (taskId) =>
-    set((state) => ({
+    };
+  }),
+  deleteTask: (taskId) => set((state) => {
+    console.log('Deleting task:', taskId);
+    return {
       tasks: state.tasks.filter((task) => task.id !== taskId),
-    })),
+    };
+  }),
 }))
