@@ -21,7 +21,7 @@ import { useUser } from '@supabase/auth-helpers-react'
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const { tasks, setTasks } = useTodoStore()
+  const { tasks, setTasks, addTask, updateTask, deleteTask } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
@@ -79,7 +79,6 @@ export default function TodoList() {
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
-      const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No user found')
       
       const newTask = { 
@@ -97,6 +96,7 @@ export default function TodoList() {
       return data as Task
     },
     onSuccess: (newTask) => {
+      addTask(newTask)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast({
         title: "Task added",
@@ -124,6 +124,7 @@ export default function TodoList() {
       return data as Task
     },
     onSuccess: (updatedTask) => {
+      updateTask(updatedTask)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       setEditingTask(null)
       toast({
@@ -149,6 +150,7 @@ export default function TodoList() {
       if (error) throw error
     },
     onSuccess: (_, taskId) => {
+      deleteTask(taskId)
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       const deletedTask = tasks.find(task => task.id === taskId)
       toast({
