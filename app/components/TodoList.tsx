@@ -29,13 +29,18 @@ export default function TodoList() {
   const user = useUser()
 
   const fetchTasks = useCallback(async () => {
+    if (!user?.id) {
+      // If there's no user ID, return an empty array
+      return []
+    }
+
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
-        user_roles (role)
+        user_roles!inner (role)
       `)
-      .eq('user_roles.user_id', user?.id ?? '')
+      .eq('user_roles.user_id', user.id)
     if (error) throw error
     return data as Task[]
   }, [supabase, user])
@@ -73,14 +78,25 @@ export default function TodoList() {
       if (!user) throw new Error('No user found')
       
       const newTask = { title, status: 'active' as const, user_id: user.id }
-      const { data, error } = await supabase
+      const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .insert(newTask)
         .select()
         .single()
       
-      if (error) throw error
-      return data as Task
+      if (taskError) throw taskError
+
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: user.id,
+          task_id: taskData.id,
+          role: 'owner'
+        })
+
+      if (roleError) throw roleError
+
+      return taskData as Task
     },
     onSuccess: (newTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
