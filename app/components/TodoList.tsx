@@ -86,6 +86,7 @@ export default function TodoList() {
       
       if (taskError) throw taskError
 
+      // Create user_role entry
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
@@ -96,7 +97,16 @@ export default function TodoList() {
 
       if (roleError) throw roleError
 
-      return taskData as Task
+      // Fetch the task with user_roles
+      const { data: fullTaskData, error: fullTaskError } = await supabase
+        .from('tasks')
+        .select(`*, user_roles (role)`)
+        .eq('id', taskData.id)
+        .single()
+
+      if (fullTaskError) throw fullTaskError
+
+      return fullTaskData as Task
     },
     onSuccess: (newTask) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })

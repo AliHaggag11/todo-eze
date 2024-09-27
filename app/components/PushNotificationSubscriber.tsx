@@ -3,11 +3,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useUser } from '@supabase/auth-helpers-react'
 import { Button } from '@/app/components/ui/button'
 import { Database } from '@/lib/database.types'
+import { useToast } from "@/hooks/use-toast"
 
 export default function PushNotificationSubscriber() {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const supabase = createClientComponentClient<Database>()
   const user = useUser()
+  const { toast } = useToast()
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -29,15 +31,28 @@ export default function PushNotificationSubscriber() {
         })
 
         if (user?.id) {
-          await supabase.from('push_subscriptions').insert({
+          const { error } = await supabase.from('push_subscriptions').insert({
             user_id: user.id,
             subscription: JSON.stringify(subscription)
           })
-        }
 
-        setIsSubscribed(true)
+          if (error) throw error
+
+          setIsSubscribed(true)
+          toast({
+            title: "Notifications enabled",
+            description: "You will now receive push notifications.",
+          })
+        } else {
+          throw new Error('User not found')
+        }
       } catch (error) {
         console.error('Failed to subscribe the user: ', error)
+        toast({
+          title: "Error",
+          description: "Failed to enable notifications. Please try again.",
+          variant: "destructive",
+        })
       }
     }
   }
