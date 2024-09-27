@@ -8,8 +8,6 @@ import { Database } from '@/lib/database.types'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import { Button } from '@/app/components/ui/button'
-import ServiceWorkerRegistration from './components/ServiceWorkerRegistration'
-import PushNotificationSubscriber from './components/PushNotificationSubscriber'
 
 const queryClient = new QueryClient()
 
@@ -44,17 +42,13 @@ export default function Home() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ServiceWorkerRegistration />
       {!session ? (
         <Auth />
       ) : (
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center my-8">
             <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
-            <div className="space-x-2">
-              <PushNotificationSubscriber />
-              <Button onClick={handleLogout} variant="outline">Logout</Button>
-            </div>
+            <Button onClick={handleLogout} variant="outline">Logout</Button>
           </div>
           <TodoList />
         </div>

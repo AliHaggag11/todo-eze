@@ -85,19 +85,16 @@ export default function TodoList() {
         status: 'active' as const, 
         user_id: user.id,
       }
-      const { data: taskData, error: taskError } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .insert(newTask)
         .select()
         .single()
       
-      if (taskError) throw taskError
-
-      console.log('New task added:', taskData);
-      return taskData as Task
+      if (error) throw error
+      return data as Task
     },
     onSuccess: (newTask) => {
-      console.log('Task added successfully:', newTask);
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast({
         title: "Task added",
@@ -192,7 +189,6 @@ export default function TodoList() {
     if (editingTask) {
       try {
         await updateTaskMutation.mutateAsync(editingTask)
-        // The dialog will be closed automatically due to the DialogClose component
       } catch (error) {
         console.error('Error in handleUpdateTask:', error)
       }
@@ -202,8 +198,6 @@ export default function TodoList() {
   const handleDeleteTask = (taskId: string) => {
     deleteTaskMutation.mutate(taskId)
   }
-
-  console.log('Rendering tasks:', tasks);
 
   if (isLoading) return <div>Loading tasks...</div>
   if (fetchError) return <div>Error loading tasks: {fetchError.message}</div>
