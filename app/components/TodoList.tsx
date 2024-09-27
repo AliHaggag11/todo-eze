@@ -7,27 +7,32 @@ import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
 import { useToast } from "@/hooks/use-toast"
 import { PlusIcon, TrashIcon } from 'lucide-react'
-import { useUser } from '@supabase/auth-helpers-react'
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
+  const [userId, setUserId] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
-  const user = useUser()
 
   useEffect(() => {
-    console.log('Current user:', user)
-  }, [user])
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log('Fetched user:', user)
+      setUserId(user?.id || null)
+    }
+    fetchUser()
+  }, [supabase.auth])
 
   const fetchTasks = async () => {
-    if (!user?.id) {
+    if (!userId) {
       console.log('No user ID available for fetching tasks')
       return []
     }
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
     if (error) {
       console.error('Error fetching tasks:', error)
@@ -37,21 +42,21 @@ export default function TodoList() {
   }
 
   const { data: tasks, isLoading, error } = useQuery<Task[]>({
-    queryKey: ['tasks'],
+    queryKey: ['tasks', userId],
     queryFn: fetchTasks,
-    enabled: !!user,
+    enabled: !!userId,
   })
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
-      if (!user) {
-        console.error('No user found when adding task')
+      if (!userId) {
+        console.error('No user ID available when adding task')
         throw new Error('No user found')
       }
-      console.log('Adding task for user:', user.id)
+      console.log('Adding task for user:', userId)
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ title, user_id: user.id })
+        .insert({ title, user_id: userId })
         .select()
         .single()
       if (error) {
@@ -61,7 +66,7 @@ export default function TodoList() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
       toast({ title: "Task added", description: "Your task has been added successfully." })
     },
     onError: (error) => {
@@ -82,7 +87,7 @@ export default function TodoList() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
@@ -98,7 +103,7 @@ export default function TodoList() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
       toast({ title: "Task deleted", description: "Your task has been deleted successfully." })
     },
     onError: () => {
