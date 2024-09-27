@@ -36,11 +36,8 @@ export default function TodoList() {
 
     const { data, error } = await supabase
       .from('tasks')
-      .select(`
-        *,
-        user_roles (role)
-      `)
-      .or(`user_id.eq.${user.id},user_roles.user_id.eq.${user.id}`)
+      .select('*')
+      .eq('user_id', user.id)
     
     if (error) {
       console.error('Error fetching tasks:', error);
@@ -88,7 +85,6 @@ export default function TodoList() {
         title, 
         status: 'active' as const, 
         user_id: user.id,
-        created_by: user.id
       }
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
@@ -98,26 +94,8 @@ export default function TodoList() {
       
       if (taskError) throw taskError
 
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
-          task_id: taskData.id,
-          role: 'owner'
-        })
-
-      if (roleError) throw roleError
-
-      const { data: fullTaskData, error: fullTaskError } = await supabase
-        .from('tasks')
-        .select(`*, user_roles (role)`)
-        .eq('id', taskData.id)
-        .single()
-
-      if (fullTaskError) throw fullTaskError
-
-      console.log('New task added:', fullTaskData);
-      return fullTaskData as Task
+      console.log('New task added:', taskData);
+      return taskData as Task
     },
     onSuccess: (newTask) => {
       console.log('Task added successfully:', newTask);
@@ -226,61 +204,6 @@ export default function TodoList() {
     deleteTaskMutation.mutate(taskId)
   }
 
-  const handleAssignTask = async (taskId: string, assignedTo: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ assigned_to: assignedTo })
-        .eq('id', taskId)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Send notification
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', assignedTo)
-        .single()
-
-      if (userError) throw userError
-
-      const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from('push_subscriptions')
-        .select('subscription')
-        .eq('user_id', userData.id)
-        .single()
-
-      if (subscriptionError) throw subscriptionError
-
-      await fetch('/api/sendNotification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subscription: JSON.parse(subscriptionData.subscription),
-          title: 'New Task Assigned',
-          body: `You have been assigned a new task: ${data.title}`,
-        }),
-      })
-
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      toast({
-        title: "Task assigned",
-        description: `Task has been assigned successfully.`,
-      })
-    } catch (error) {
-      console.error('Error assigning task:', error)
-      toast({
-        title: "Error",
-        description: "Failed to assign task. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
   console.log('Rendering tasks:', tasks);
 
   if (isLoading) return <div>Loading tasks...</div>
@@ -306,78 +229,53 @@ export default function TodoList() {
         {tasks.map((task) => (
           <li key={task.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
             <div className="flex items-center space-x-3">
-              {task.user_roles[0]?.role !== 'viewer' && (
-                <input
-                  type="checkbox"
-                  checked={task.status === 'completed'}
-                  onChange={() => handleToggleTask(task)}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                />
-              )}
+              <input
+                type="checkbox"
+                checked={task.status === 'completed'}
+                onChange={() => handleToggleTask(task)}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
               <span className={`text-lg ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-800 dark:text-white'}`}>
                 {task.title}
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              {task.user_roles[0]?.role === 'owner' && (
-                <>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        Assign
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Assign Task</DialogTitle>
-                      </DialogHeader>
-                      <Input
-                        placeholder="Enter user email"
-                        onChange={(e) => setAssignTo(e.target.value)}
-                      />
-                      <DialogClose asChild>
-                        <Button onClick={() => handleAssignTask(task.id, assignTo)}>Assign</Button>
-                      </DialogClose>
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => handleEditTask(task)} variant="outline" size="sm" className="text-gray-700 dark:text-gray-300">
-                        <EditIcon className="w-4 h-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg max-w-md w-full mx-auto">
-                      <DialogClose className="absolute right-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                        <XIcon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-                        <span className="sr-only">Close</span>
-                      </DialogClose>
-                      <DialogHeader className="mb-4">
-                        <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">Edit Task</DialogTitle>
-                      </DialogHeader>
-                      <form onSubmit={handleUpdateTask} className="space-y-4">
-                        <Input
-                          type="text"
-                          value={editingTask?.title || ''}
-                          onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                          className="w-full text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
-                        />
-                        <DialogClose asChild>
-                          <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md py-2 transition duration-200 ease-in-out">
-                            <CheckIcon className="w-4 h-4 mr-2" /> Update Task
-                          </Button>
-                        </DialogClose>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    onClick={() => handleDeleteTask(task.id)}
-                    variant="destructive"
-                    size="sm"
-                  >
-                    <TrashIcon className="w-4 h-4" />
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button onClick={() => handleEditTask(task)} variant="outline" size="sm" className="text-gray-700 dark:text-gray-300">
+                    <EditIcon className="w-4 h-4" />
                   </Button>
-                </>
-              )}
+                </DialogTrigger>
+                <DialogContent className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg max-w-md w-full mx-auto">
+                  <DialogClose className="absolute right-4 top-4 rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                    <XIcon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                    <span className="sr-only">Close</span>
+                  </DialogClose>
+                  <DialogHeader className="mb-4">
+                    <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">Edit Task</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdateTask} className="space-y-4">
+                    <Input
+                      type="text"
+                      value={editingTask?.title || ''}
+                      onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
+                      className="w-full text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
+                    />
+                    <DialogClose asChild>
+                      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-md py-2 transition duration-200 ease-in-out">
+                        <CheckIcon className="w-4 h-4 mr-2" /> Update Task
+                      </Button>
+                    </DialogClose>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button
+                onClick={() => handleDeleteTask(task.id)}
+                variant="destructive"
+                size="sm"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </Button>
             </div>
           </li>
         ))}
