@@ -46,8 +46,42 @@ export default function TodoList() {
   useEffect(() => {
     if (userId) {
       fetchTasks().then(fetchedTasks => setTasks(fetchedTasks))
+
+      // Set up real-time subscription
+      const subscription = supabase
+        .channel('tasks_changes')
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'tasks',
+            filter: `user_id=eq.${userId}`
+          }, 
+          (payload) => {
+            console.log('Change received!', payload)
+            if (payload.eventType === 'INSERT') {
+              setTasks(currentTasks => [payload.new as Task, ...currentTasks])
+            } else if (payload.eventType === 'UPDATE') {
+              setTasks(currentTasks => 
+                currentTasks.map(task => 
+                  task.id === payload.new.id ? (payload.new as Task) : task
+                )
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setTasks(currentTasks => 
+                currentTasks.filter(task => task.id !== payload.old.id)
+              )
+            }
+          }
+        )
+        .subscribe()
+
+      // Cleanup subscription on component unmount
+      return () => {
+        subscription.unsubscribe()
+      }
     }
-  }, [userId])
+  }, [userId, supabase])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
@@ -135,6 +169,7 @@ export default function TodoList() {
     if (newTask.trim()) {
       await addTaskMutation.mutateAsync(newTask.trim())
       setNewTask('')
+      // No need to update tasks state here, it will be handled by the real-time subscription
     }
   }
 
@@ -146,7 +181,7 @@ export default function TodoList() {
     e.preventDefault()
     if (editingTask) {
       await editTaskMutation.mutateAsync(editingTask)
-      // No need to setEditingTask(null) here as it's done in onSuccess
+      // No need to update tasks state or setEditingTask(null) here, it will be handled by the real-time subscription
     }
   }
 
