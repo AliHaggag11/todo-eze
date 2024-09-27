@@ -30,7 +30,6 @@ export default function TodoList() {
 
   const fetchTasks = useCallback(async () => {
     if (!user?.id) {
-      // If there's no user ID, return an empty array
       return []
     }
 
@@ -40,7 +39,7 @@ export default function TodoList() {
         *,
         user_roles!inner (role)
       `)
-      .eq('user_roles.user_id', user.id)
+      .or(`user_id.eq.${user.id},user_roles.user_id.eq.${user.id}`)
     if (error) throw error
     return data as Task[]
   }, [supabase, user])
@@ -77,7 +76,12 @@ export default function TodoList() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No user found')
       
-      const newTask = { title, status: 'active' as const, user_id: user.id }
+      const newTask = { 
+        title, 
+        status: 'active' as const, 
+        user_id: user.id,
+        created_by: user.id  // Add this line
+      }
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .insert(newTask)
