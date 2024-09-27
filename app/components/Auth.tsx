@@ -1,36 +1,54 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Button } from '@/app/components/ui/button'  // Add this import
 import { Database } from '@/lib/database.types'
+import { GithubIcon } from 'lucide-react'
+import Ripple from '@/app/components/magicui/ripple'
 
 export default function Auth() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
   const supabase = createClientComponentClient<Database>()
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) console.error('Error signing up:', error)
-  }
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) console.error('Error signing in:', error)
+  const handleLogin = async () => {
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
+    } catch (error) {
+      console.error('Error logging in:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div>
-      <form onSubmit={handleSignUp}>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-        <button type="submit">Sign Up</button>
-      </form>
-      <form onSubmit={handleSignIn}>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-        <button type="submit">Sign In</button>
-      </form>
+    <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+      <div className="relative w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <Ripple className="absolute inset-0 z-0" />
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold mb-6 text-center">Welcome to Todo List</h1>
+          <p className="text-gray-400 mb-8 text-center">Sign in to manage your tasks</p>
+          <Button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded flex items-center justify-center"
+          >
+            {loading ? (
+              'Loading...'
+            ) : (
+              <>
+                <GithubIcon className="w-5 h-5 mr-2" />
+                Sign in with GitHub
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
