@@ -30,19 +30,26 @@ export default function TodoList() {
 
   const fetchTasks = useCallback(async () => {
     if (!user?.id) {
-      return []
+      console.log('No user ID available');
+      return [];
     }
 
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
-        user_roles!inner (role)
+        user_roles (role)
       `)
       .or(`user_id.eq.${user.id},user_roles.user_id.eq.${user.id}`)
-    if (error) throw error
-    return data as Task[]
-  }, [supabase, user])
+    
+    if (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
+    
+    console.log('Fetched tasks:', data);
+    return data as Task[];
+  }, [supabase, user]);
 
   const { data, isLoading, error: fetchError } = useQuery<Task[], Error>({
     queryKey: ['tasks'],
@@ -51,7 +58,8 @@ export default function TodoList() {
 
   useEffect(() => {
     if (data) {
-      setTasks(data)
+      console.log('Setting tasks:', data);
+      setTasks(data);
     }
   }, [data, setTasks])
 
@@ -80,7 +88,7 @@ export default function TodoList() {
         title, 
         status: 'active' as const, 
         user_id: user.id,
-        created_by: user.id  // Add this line
+        created_by: user.id
       }
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
@@ -90,7 +98,6 @@ export default function TodoList() {
       
       if (taskError) throw taskError
 
-      // Create user_role entry
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
@@ -101,7 +108,6 @@ export default function TodoList() {
 
       if (roleError) throw roleError
 
-      // Fetch the task with user_roles
       const { data: fullTaskData, error: fullTaskError } = await supabase
         .from('tasks')
         .select(`*, user_roles (role)`)
@@ -110,9 +116,11 @@ export default function TodoList() {
 
       if (fullTaskError) throw fullTaskError
 
+      console.log('New task added:', fullTaskData);
       return fullTaskData as Task
     },
     onSuccess: (newTask) => {
+      console.log('Task added successfully:', newTask);
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast({
         title: "Task added",
@@ -272,6 +280,8 @@ export default function TodoList() {
       })
     }
   }
+
+  console.log('Rendering tasks:', tasks);
 
   if (isLoading) return <div>Loading tasks...</div>
   if (fetchError) return <div>Error loading tasks: {fetchError.message}</div>
