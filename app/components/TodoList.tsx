@@ -1,101 +1,71 @@
 import { useState, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
 import { useToast } from "@/hooks/use-toast"
-import { PlusIcon, TrashIcon } from 'lucide-react'
+import { PlusIcon, TrashIcon, EditIcon } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/app/components/ui/dialog"
 
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  const queryClient = useQueryClient()
+  const [tasks, setTasks] = useState<Task[]>([])
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      console.log('Fetched user:', user)
       setUserId(user?.id || null)
     }
     fetchUser()
   }, [supabase.auth])
 
-  useEffect(() => {
-    if (!userId) return
-
-    const channel = supabase
-      .channel('tasks_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tasks',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Change received!', payload)
-          queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase, userId, queryClient])
-
   const fetchTasks = async () => {
-    if (!userId) {
-      console.log('No user ID available for fetching tasks')
-      return []
-    }
+    if (!userId) return []
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-    if (error) {
-      console.error('Error fetching tasks:', error)
-      throw error
-    }
-    return data
+    if (error) throw error
+    return data as Task[]
   }
 
-  const { data: tasks, isLoading, error } = useQuery<Task[]>({
-    queryKey: ['tasks', userId],
-    queryFn: fetchTasks,
-    enabled: !!userId,
-  })
+  useEffect(() => {
+    if (userId) {
+      fetchTasks().then(fetchedTasks => setTasks(fetchedTasks))
+    }
+  }, [userId])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
-      if (!userId) {
-        console.error('No user ID available when adding task')
-        throw new Error('No user found')
-      }
-      console.log('Adding task for user:', userId)
+      if (!userId) throw new Error('No user found')
       const { data, error } = await supabase
         .from('tasks')
         .insert({ title, user_id: userId })
         .select()
         .single()
-      if (error) {
-        console.error('Error adding task:', error)
-        throw error
-      }
-      return data
+      if (error) throw error
+      return data as Task
     },
-    onSuccess: () => {
+    onSuccess: (newTask) => {
+      setTasks(currentTasks => [newTask, ...currentTasks])
       toast({ title: "Task added", description: "Your task has been added successfully." })
     },
-    onError: (error) => {
-      console.error('Error in addTaskMutation:', error)
-      toast({ title: "Error", description: `Failed to add task: ${error.message}`, variant: "destructive" })
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
     },
   })
 
@@ -108,7 +78,12 @@ export default function TodoList() {
         .select()
         .single()
       if (error) throw error
-      return data
+      return data as Task
+    },
+    onSuccess: (updatedTask) => {
+      setTasks(currentTasks => 
+        currentTasks.map(task => task.id === updatedTask.id ? updatedTask : task)
+      )
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
@@ -123,7 +98,8 @@ export default function TodoList() {
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedTaskId) => {
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== deletedTaskId))
       toast({ title: "Task deleted", description: "Your task has been deleted successfully." })
     },
     onError: () => {
@@ -131,20 +107,47 @@ export default function TodoList() {
     },
   })
 
+  const editTaskMutation = useMutation({
+    mutationFn: async (task: Task) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ title: task.title })
+        .eq('id', task.id)
+        .select()
+        .single()
+      if (error) throw error
+      return data as Task
+    },
+    onSuccess: (updatedTask) => {
+      setTasks(currentTasks => 
+        currentTasks.map(task => task.id === updatedTask.id ? updatedTask : task)
+      )
+      toast({ title: "Task updated", description: "Your task has been updated successfully." })
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
+    },
+  })
+
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim()) {
-      try {
-        await addTaskMutation.mutateAsync(newTask.trim())
-        setNewTask('')
-      } catch (error) {
-        console.error('Error in handleAddTask:', error)
-      }
+      await addTaskMutation.mutateAsync(newTask.trim())
+      setNewTask('')
     }
   }
 
-  if (isLoading) return <div>Loading tasks...</div>
-  if (error) return <div>Error loading tasks: {error.message}</div>
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+  }
+
+  const handleUpdateTask = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (editingTask) {
+      await editTaskMutation.mutateAsync(editingTask)
+      setEditingTask(null)
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
@@ -163,7 +166,7 @@ export default function TodoList() {
         </div>
       </form>
       <ul className="space-y-3">
-        {tasks?.map((task) => (
+        {tasks.map((task) => (
           <li key={task.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-md">
             <div className="flex items-center space-x-3">
               <input
@@ -176,17 +179,45 @@ export default function TodoList() {
                 {task.title}
               </span>
             </div>
-            <Button
-              onClick={() => deleteTaskMutation.mutate(task.id)}
-              variant="destructive"
-              size="sm"
-            >
-              <TrashIcon className="w-4 h-4" />
-            </Button>
+            <div className="flex space-x-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    onClick={() => handleEditTask(task)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <EditIcon className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Task</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdateTask}>
+                    <Input
+                      value={editingTask?.title || ''}
+                      onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
+                      className="mb-4"
+                    />
+                    <DialogClose asChild>
+                      <Button type="submit">Update Task</Button>
+                    </DialogClose>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button
+                onClick={() => deleteTaskMutation.mutate(task.id)}
+                variant="destructive"
+                size="sm"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </Button>
+            </div>
           </li>
         ))}
       </ul>
-      {tasks?.length === 0 && (
+      {tasks.length === 0 && (
         <p className="text-center text-gray-600 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
       )}
     </div>
