@@ -9,6 +9,7 @@ import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import { Button } from '@/app/components/ui/button'
 import ServiceWorkerRegistration from './components/ServiceWorkerRegistration'
+import PushNotificationSubscriber from './components/PushNotificationSubscriber'
 
 const queryClient = new QueryClient()
 
@@ -50,7 +51,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center my-8">
             <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
-            <Button onClick={handleLogout} variant="outline">Logout</Button>
+            <div className="space-x-2">
+              <PushNotificationSubscriber />
+              <Button onClick={handleLogout} variant="outline">Logout</Button>
+            </div>
           </div>
           <TodoList />
         </div>

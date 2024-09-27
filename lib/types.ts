@@ -4,4 +4,6 @@ export interface Task {
   title: string;
   status: 'active' | 'completed';
   user_id: string;
+  assigned_to: string | null;
+  user_roles: { role: 'owner' | 'editor' | 'viewer' }[];
 }
