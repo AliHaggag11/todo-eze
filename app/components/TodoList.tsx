@@ -135,7 +135,7 @@ export default function TodoList() {
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="Add a new task"
-            className="flex-grow"
+            className="flex-grow text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400"
           />
           <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
             <PlusIcon className="w-5 h-5 mr-1" /> Add
@@ -152,7 +152,7 @@ export default function TodoList() {
                 onChange={() => toggleTaskMutation.mutate(task)}
                 className="w-5 h-5"
               />
-              <span className={task.is_complete ? 'line-through text-gray-500' : ''}>
+              <span className={`${task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
                 {task.title}
               </span>
             </div>
@@ -167,7 +167,7 @@ export default function TodoList() {
         ))}
       </ul>
       {tasks?.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400 mt-6">No tasks yet. Add one to get started!</p>
+        <p className="text-center text-gray-600 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
       )}
     </div>
   )
