@@ -21,7 +21,6 @@ import { useUser } from '@supabase/auth-helpers-react'
 export default function TodoList() {
   const [newTask, setNewTask] = useState('')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [assignTo, setAssignTo] = useState('')
   const { tasks, setTasks } = useTodoStore()
   const queryClient = useQueryClient()
   const supabase = createClientComponentClient<Database>()
