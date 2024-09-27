@@ -6,7 +6,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
 import { useToast } from "@/hooks/use-toast"
-import { PlusIcon, TrashIcon, EditIcon } from 'lucide-react'
+import { PlusIcon, TrashIcon, PencilIcon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -122,6 +122,7 @@ export default function TodoList() {
       setTasks(currentTasks => 
         currentTasks.map(task => task.id === updatedTask.id ? updatedTask : task)
       )
+      setEditingTask(null) // Reset editing task
       toast({ title: "Task updated", description: "Your task has been updated successfully." })
     },
     onError: () => {
@@ -145,7 +146,7 @@ export default function TodoList() {
     e.preventDefault()
     if (editingTask) {
       await editTaskMutation.mutateAsync(editingTask)
-      setEditingTask(null)
+      // No need to setEditingTask(null) here as it's done in onSuccess
     }
   }
 
@@ -176,7 +177,7 @@ export default function TodoList() {
                 className="w-5 h-5"
               />
               <span className={`${task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
-                {task.title}
+                {editingTask && editingTask.id === task.id ? editingTask.title : task.title}
               </span>
             </div>
             <div className="flex space-x-2">
@@ -186,11 +187,12 @@ export default function TodoList() {
                     onClick={() => handleEditTask(task)}
                     variant="outline"
                     size="sm"
+                    className="bg-gray-200 dark:bg-gray-600"
                   >
-                    <EditIcon className="w-4 h-4" />
+                    <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="bg-white dark:bg-gray-800">
                   <DialogHeader>
                     <DialogTitle>Edit Task</DialogTitle>
                   </DialogHeader>
