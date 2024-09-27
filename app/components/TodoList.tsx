@@ -37,6 +37,7 @@ export default function TodoList() {
       .from('tasks')
       .select('*')
       .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
     
     if (error) {
       console.error('Error fetching tasks:', error);
@@ -50,6 +51,7 @@ export default function TodoList() {
   const { data, isLoading, error: fetchError } = useQuery<Task[], Error>({
     queryKey: ['tasks'],
     queryFn: fetchTasks,
+    enabled: !!user,
   })
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export default function TodoList() {
       .channel('table-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
         console.log('Real-time update received:', payload)
-        fetchTasks().then(setTasks)
+        queryClient.invalidateQueries({ queryKey: ['tasks'] })
       })
       .subscribe((status) => {
         console.log('Subscription status:', status)
@@ -73,7 +75,7 @@ export default function TodoList() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [supabase, setTasks, fetchTasks])
+  }, [supabase, queryClient])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
