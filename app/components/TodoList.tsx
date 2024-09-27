@@ -6,7 +6,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
 import { useToast } from "@/hooks/use-toast"
-import { PlusIcon, TrashIcon, PencilIcon } from 'lucide-react'
+import { PlusIcon, TrashIcon, EditIcon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -46,42 +46,8 @@ export default function TodoList() {
   useEffect(() => {
     if (userId) {
       fetchTasks().then(fetchedTasks => setTasks(fetchedTasks))
-
-      // Set up real-time subscription
-      const subscription = supabase
-        .channel('tasks_changes')
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'tasks',
-            filter: `user_id=eq.${userId}`
-          }, 
-          (payload) => {
-            console.log('Change received!', payload)
-            if (payload.eventType === 'INSERT') {
-              setTasks(currentTasks => [payload.new as Task, ...currentTasks])
-            } else if (payload.eventType === 'UPDATE') {
-              setTasks(currentTasks => 
-                currentTasks.map(task => 
-                  task.id === payload.new.id ? (payload.new as Task) : task
-                )
-              )
-            } else if (payload.eventType === 'DELETE') {
-              setTasks(currentTasks => 
-                currentTasks.filter(task => task.id !== payload.old.id)
-              )
-            }
-          }
-        )
-        .subscribe()
-
-      // Cleanup subscription on component unmount
-      return () => {
-        subscription.unsubscribe()
-      }
     }
-  }, [userId, supabase])
+  }, [userId])
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
@@ -132,8 +98,8 @@ export default function TodoList() {
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: () => {
-      // Remove the manual state update
+    onSuccess: (_, deletedTaskId) => {
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== deletedTaskId))
       toast({ title: "Task deleted", description: "Your task has been deleted successfully." })
     },
     onError: () => {
@@ -156,7 +122,6 @@ export default function TodoList() {
       setTasks(currentTasks => 
         currentTasks.map(task => task.id === updatedTask.id ? updatedTask : task)
       )
-      setEditingTask(null) // Reset editing task
       toast({ title: "Task updated", description: "Your task has been updated successfully." })
     },
     onError: () => {
@@ -169,7 +134,6 @@ export default function TodoList() {
     if (newTask.trim()) {
       await addTaskMutation.mutateAsync(newTask.trim())
       setNewTask('')
-      // No need to update tasks state here, it will be handled by the real-time subscription
     }
   }
 
@@ -181,7 +145,7 @@ export default function TodoList() {
     e.preventDefault()
     if (editingTask) {
       await editTaskMutation.mutateAsync(editingTask)
-      // No need to update tasks state or setEditingTask(null) here, it will be handled by the real-time subscription
+      setEditingTask(null)
     }
   }
 
@@ -212,7 +176,7 @@ export default function TodoList() {
                 className="w-5 h-5"
               />
               <span className={`${task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
-                {editingTask && editingTask.id === task.id ? editingTask.title : task.title}
+                {task.title}
               </span>
             </div>
             <div className="flex space-x-2">
@@ -222,12 +186,11 @@ export default function TodoList() {
                     onClick={() => handleEditTask(task)}
                     variant="outline"
                     size="sm"
-                    className="bg-gray-200 dark:bg-gray-600"
                   >
-                    <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                    <EditIcon className="w-4 h-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800">
+                <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Edit Task</DialogTitle>
                   </DialogHeader>
