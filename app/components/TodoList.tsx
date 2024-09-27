@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Task } from '@/lib/types'
@@ -16,13 +16,23 @@ export default function TodoList() {
   const { toast } = useToast()
   const user = useUser()
 
+  useEffect(() => {
+    console.log('Current user:', user)
+  }, [user])
+
   const fetchTasks = async () => {
-    if (!user?.id) return []
+    if (!user?.id) {
+      console.log('No user ID available for fetching tasks')
+      return []
+    }
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
       .order('created_at', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching tasks:', error)
+      throw error
+    }
     return data
   }
 
@@ -34,21 +44,29 @@ export default function TodoList() {
 
   const addTaskMutation = useMutation({
     mutationFn: async (title: string) => {
-      if (!user) throw new Error('No user found')
+      if (!user) {
+        console.error('No user found when adding task')
+        throw new Error('No user found')
+      }
+      console.log('Adding task for user:', user.id)
       const { data, error } = await supabase
         .from('tasks')
         .insert({ title, user_id: user.id })
         .select()
         .single()
-      if (error) throw error
+      if (error) {
+        console.error('Error adding task:', error)
+        throw error
+      }
       return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast({ title: "Task added", description: "Your task has been added successfully." })
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
+    onError: (error) => {
+      console.error('Error in addTaskMutation:', error)
+      toast({ title: "Error", description: `Failed to add task: ${error.message}`, variant: "destructive" })
     },
   })
 
@@ -91,8 +109,12 @@ export default function TodoList() {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim()) {
-      await addTaskMutation.mutateAsync(newTask.trim())
-      setNewTask('')
+      try {
+        await addTaskMutation.mutateAsync(newTask.trim())
+        setNewTask('')
+      } catch (error) {
+        console.error('Error in handleAddTask:', error)
+      }
     }
   }
 
