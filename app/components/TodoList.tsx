@@ -24,6 +24,31 @@ export default function TodoList() {
     fetchUser()
   }, [supabase.auth])
 
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel('tasks_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${userId}`
+        },
+        (payload) => {
+          console.log('Change received!', payload)
+          queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, userId, queryClient])
+
   const fetchTasks = async () => {
     if (!userId) {
       console.log('No user ID available for fetching tasks')
@@ -66,7 +91,6 @@ export default function TodoList() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
       toast({ title: "Task added", description: "Your task has been added successfully." })
     },
     onError: (error) => {
@@ -86,9 +110,6 @@ export default function TodoList() {
       if (error) throw error
       return data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
-    },
     onError: () => {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
     },
@@ -103,7 +124,6 @@ export default function TodoList() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', userId] })
       toast({ title: "Task deleted", description: "Your task has been deleted successfully." })
     },
     onError: () => {
