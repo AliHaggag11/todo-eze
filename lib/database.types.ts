@@ -12,27 +12,26 @@ export interface Database {
       tasks: {
         Row: {
           id: string
-          created_at: string
-          title: string
-          status: 'active' | 'completed'
           user_id: string
+          title: string
+          is_complete: boolean
+          created_at: string
         }
         Insert: {
           id?: string
-          created_at?: string
-          title: string
-          status?: 'active' | 'completed'
           user_id: string
+          title: string
+          is_complete?: boolean
+          created_at?: string
         }
         Update: {
           id?: string
-          created_at?: string
-          title?: string
-          status?: 'active' | 'completed'
           user_id?: string
+          title?: string
+          is_complete?: boolean
+          created_at?: string
         }
       }
     }
-    // ... (remove other tables if they no longer exist)
   }
 }
