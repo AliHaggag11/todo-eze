@@ -48,56 +48,37 @@ export default function TodoList() {
       fetchTasks().then(fetchedTasks => setTasks(fetchedTasks))
 
       // Set up real-time subscription
-      const channel = supabase.channel('tasks_changes')
-      
-      channel
+      const subscription = supabase
+        .channel('tasks_changes')
         .on('postgres_changes', 
           { 
-            event: 'INSERT', 
+            event: '*', 
             schema: 'public', 
             table: 'tasks',
             filter: `user_id=eq.${userId}`
           }, 
           (payload) => {
-            console.log('INSERT received', payload)
-            setTasks(currentTasks => [payload.new as Task, ...currentTasks])
-          }
-        )
-        .on('postgres_changes', 
-          { 
-            event: 'UPDATE', 
-            schema: 'public', 
-            table: 'tasks',
-            filter: `user_id=eq.${userId}`
-          }, 
-          (payload) => {
-            console.log('UPDATE received', payload)
-            setTasks(currentTasks => 
-              currentTasks.map(task => 
-                task.id === payload.new.id ? (payload.new as Task) : task
+            console.log('Change received!', payload)
+            if (payload.eventType === 'INSERT') {
+              setTasks(currentTasks => [payload.new as Task, ...currentTasks])
+            } else if (payload.eventType === 'UPDATE') {
+              setTasks(currentTasks => 
+                currentTasks.map(task => 
+                  task.id === payload.new.id ? (payload.new as Task) : task
+                )
               )
-            )
-          }
-        )
-        .on('postgres_changes', 
-          { 
-            event: 'DELETE', 
-            schema: 'public', 
-            table: 'tasks',
-            filter: `user_id=eq.${userId}`
-          }, 
-          (payload) => {
-            console.log('DELETE received', payload)
-            setTasks(currentTasks => 
-              currentTasks.filter(task => task.id !== payload.old.id)
-            )
+            } else if (payload.eventType === 'DELETE') {
+              setTasks(currentTasks => 
+                currentTasks.filter(task => task.id !== payload.old.id)
+              )
+            }
           }
         )
         .subscribe()
 
       // Cleanup subscription on component unmount
       return () => {
-        channel.unsubscribe()
+        subscription.unsubscribe()
       }
     }
   }, [userId, supabase])
@@ -150,6 +131,10 @@ export default function TodoList() {
         .delete()
         .eq('id', taskId)
       if (error) throw error
+    },
+    onSuccess: () => {
+      // Remove the manual state update
+      toast({ title: "Task deleted", description: "Your task has been deleted successfully." })
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
