@@ -132,8 +132,8 @@ export default function TodoList() {
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: (_, deletedTaskId) => {
-      setTasks(currentTasks => currentTasks.filter(task => task.id !== deletedTaskId))
+    onSuccess: () => {
+      // Remove the manual state update
       toast({ title: "Task deleted", description: "Your task has been deleted successfully." })
     },
     onError: () => {
