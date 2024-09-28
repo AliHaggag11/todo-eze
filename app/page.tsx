@@ -83,13 +83,19 @@ export default function Home() {
       await pushSubscription?.unsubscribe()
       setPushNotificationEnabled(false)
       setPushSubscription(null)
+      console.log('Push notification disabled')
     } else {
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-      })
-      setPushNotificationEnabled(true)
-      setPushSubscription(subscription)
+      try {
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        })
+        setPushNotificationEnabled(true)
+        setPushSubscription(subscription)
+        console.log('Push notification enabled', subscription)
+      } catch (error) {
+        console.error('Failed to subscribe to push notifications', error)
+      }
     }
   }
 

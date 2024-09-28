@@ -14,13 +14,18 @@ export async function POST(req: Request) {
   const { subscription, title, body, url } = await req.json();
 
   try {
+    console.log('Sending notification', { title, body, url })
     await webPush.sendNotification(
       subscription,
       JSON.stringify({ title, body, url })
     );
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error sending push notification:', error);
-    return NextResponse.json({ success: false, error: 'Failed to send notification' }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ success: false, error: 'Failed to send notification', details: error.message }, { status: 500 });
+    } else {
+      return NextResponse.json({ success: false, error: 'Failed to send notification', details: 'Unknown error' }, { status: 500 });
+    }
   }
 }

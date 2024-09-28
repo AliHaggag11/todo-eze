@@ -83,7 +83,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const sendPushNotification = async (title: string, body: string) => {
     if (pushSubscription) {
       try {
-        await fetch('/api/send-notification', {
+        console.log('Sending push notification', { title, body })
+        const response = await fetch('/api/send-notification', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -95,9 +96,13 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             url: window.location.origin,
           }),
         });
+        const result = await response.json()
+        console.log('Push notification result', result)
       } catch (error) {
         console.error('Error sending push notification:', error);
       }
+    } else {
+      console.log('Push subscription not available')
     }
   };
 
