@@ -111,35 +111,35 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     }
   }, [sendPushNotification]);
 
+  const fetchTasks = async () => {
+    if (!userId) {
+      console.log('No userId, skipping task fetch');
+      return;
+    }
+
+    setIsLoading(true);
+    console.log('Fetching tasks for user:', userId);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('Fetched tasks:', data);
+      setTasks(data as Task[]);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+      console.log('Task fetching complete');
+    }
+  };
+
   useEffect(() => {
-    const fetchTasks = async () => {
-      if (!userId) {
-        console.log('No userId, skipping task fetch');
-        return;
-      }
-
-      setIsLoading(true);
-      console.log('Fetching tasks for user:', userId);
-      try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        console.log('Fetched tasks:', data);
-        setTasks(data as Task[]);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-        toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-        console.log('Task fetching complete');
-      }
-    };
-
     if (userId) {
       fetchTasks();
 
@@ -196,17 +196,21 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }
 
   const handleDeleteTask = async (taskId: string) => {
+    // Update local state immediately
+    setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', taskId)
+      .eq('id', taskId);
+
     if (error) {
-      toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
-    } else {
-      // Update local state immediately
-      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId))
-      // Notification will be handled by the real-time subscription
+      // If there's an error, revert the local state change
+      toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" });
+      // Fetch tasks again to ensure consistency
+      fetchTasks();
     }
+    // The real-time subscription will handle updating other clients and sending notifications
   }
 
   const handleEditTask = (task: Task) => {
