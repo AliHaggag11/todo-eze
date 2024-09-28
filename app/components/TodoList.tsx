@@ -276,28 +276,19 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
-              <div className="flex items-center space-x-3 flex-grow min-w-0">
+            <li key={task.id} className="flex items-start justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+              <div className="flex items-start space-x-3 flex-grow min-w-0">
                 <input
                   type="checkbox"
                   checked={task.is_complete}
                   onChange={() => handleToggleTask(task)}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                  className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className={`${
-                        task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
-                      } text-lg truncate max-w-[calc(100%-4rem)]`}>
-                        {task.title}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{task.title}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <span className={`${
+                  task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
+                } text-lg break-words`}>
+                  {task.title}
+                </span>
               </div>
               <div className="flex space-x-2 ml-2 flex-shrink-0">
                 <Dialog>
