@@ -213,11 +213,10 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       const response = await fetch('/api/ai-assist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: "Suggest a task based on: " + tasks.map(t => t.title).join(", ") })
+        body: JSON.stringify({ prompt: tasks.map(t => t.title).join(", ") })
       });
       const data = await response.json();
       if (data.result) {
-        setAiSuggestion(data.result);
         setNewTask(data.result);
       }
     } catch (error) {
@@ -237,7 +236,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
       <form onSubmit={handleAddTask} className="mb-6">
         <div className="flex items-center space-x-2">
           <Input
@@ -247,14 +246,14 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             placeholder="Add a new task"
             className="flex-grow text-gray-800 dark:text-gray-200 placeholder-gray-600 dark:placeholder-gray-400"
           />
-          <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+          <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">
             <PlusIcon className="w-5 h-5 mr-1" /> Add
           </Button>
           <Button 
             type="button" 
             onClick={getAISuggestion} 
             disabled={isAiLoading}
-            className="bg-purple-500 hover:bg-purple-600"
+            className="bg-purple-500 hover:bg-purple-600 text-white"
           >
             {isAiLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -265,25 +264,20 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
           </Button>
         </div>
       </form>
-      {aiSuggestion && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          AI Suggestion: {aiSuggestion}
-        </p>
-      )}
       {tasks.length === 0 ? (
         <p className="text-center text-gray-700 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-md">
-              <div className="flex items-center space-x-3">
+            <li key={task.id} className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+              <div className="flex items-center space-x-3 flex-grow">
                 <input
                   type="checkbox"
                   checked={task.is_complete}
                   onChange={() => handleToggleTask(task)}
-                  className="w-5 h-5"
+                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className={`${task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                <span className={`${task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'} text-lg`}>
                   {task.title}
                 </span>
               </div>
@@ -294,7 +288,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                       onClick={() => handleEditTask(task)}
                       variant="outline"
                       size="sm"
-                      className="bg-gray-200 dark:bg-gray-600"
+                      className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                     >
                       <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                     </Button>
@@ -319,6 +313,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                   onClick={() => handleDeleteTask(task.id)}
                   variant="destructive"
                   size="sm"
+                  className="hover:bg-red-600"
                 >
                   <TrashIcon className="w-4 h-4" />
                 </Button>

@@ -8,9 +8,9 @@ export async function POST(req: Request) {
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
   
   try {
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(`Based on these tasks: ${prompt}, suggest a short, concise new task (max 10 words).`);
     const response = await result.response;
-    const text = response.text();
+    const text = response.text().trim();
     return NextResponse.json({ result: text });
   } catch (error) {
     console.error('Error calling Gemini API:', error);
