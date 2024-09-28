@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from 'react-markdown';
+import { Loader2 } from 'lucide-react';
 
 interface TaskSummaryProps {
   userId: string;
@@ -14,6 +15,7 @@ export function TaskSummary({ userId }: TaskSummaryProps) {
 
   const generateSummary = async (timeframe: 'daily' | 'weekly') => {
     setIsLoading(true);
+    setSummary(null);
     try {
       const response = await fetch('/api/task-summary', {
         method: 'POST',
@@ -44,6 +46,7 @@ export function TaskSummary({ userId }: TaskSummaryProps) {
           disabled={isLoading}
           className="w-full sm:w-auto"
         >
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Generate Daily Summary
         </Button>
         <Button 
@@ -51,6 +54,7 @@ export function TaskSummary({ userId }: TaskSummaryProps) {
           disabled={isLoading}
           className="w-full sm:w-auto"
         >
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Generate Weekly Summary
         </Button>
       </div>
