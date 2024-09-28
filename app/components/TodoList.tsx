@@ -27,6 +27,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAiLoading, setIsAiLoading] = useState(false)
+  const [aiSuggestedPriority, setAiSuggestedPriority] = useState<'low' | 'medium' | 'high' | null>(null)
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
 
@@ -151,13 +152,14 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     if (newTask.trim() && userId) {
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ title: newTask.trim(), user_id: userId, priority: 'medium' })
+        .insert({ title: newTask.trim(), user_id: userId, priority: aiSuggestedPriority || 'medium' })
         .select()
         .single()
       if (error) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
+        setAiSuggestedPriority(null) // Reset the AI suggested priority
         // Send notification for task creation
         await sendPushNotification('New Task Added', `Task: ${data.title}`)
       }
@@ -213,11 +215,15 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       const response = await fetch('/api/ai-assist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: tasks.map(t => t.title).join(", ") })
+        body: JSON.stringify({ prompt: tasks.map(t => `${t.title} (${t.priority})`).join(", ") })
       });
       const data = await response.json();
       if (data.result) {
-        setNewTask(data.result);
+        const [taskTitle, priorityPart] = data.result.split('|');
+        const suggestedPriority = priorityPart.split(':')[1].trim().toLowerCase();
+        setNewTask(taskTitle.split(':')[1].trim());
+        // Store the suggested priority
+        setAiSuggestedPriority(suggestedPriority as 'low' | 'medium' | 'high');
       }
     } catch (error) {
       console.error('Error getting AI suggestion:', error);
@@ -304,7 +310,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                     value={task.priority}
                     onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
                   >
-                    <SelectTrigger className="w-[90px]">
+                    <SelectTrigger className="w-[120px]">
                       <SelectValue placeholder="Priority" />
                     </SelectTrigger>
                     <SelectContent>
