@@ -81,7 +81,14 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }, [userId, supabase])
 
   const sendPushNotification = async (title: string, body: string) => {
-    if (pushSubscription) {
+    let currentSubscription = pushSubscription
+    if (!currentSubscription) {
+      const storedSubscription = localStorage.getItem('pushSubscription')
+      if (storedSubscription) {
+        currentSubscription = JSON.parse(storedSubscription)
+      }
+    }
+    if (currentSubscription) {
       try {
         console.log('Sending push notification', { title, body })
         const response = await fetch('/api/send-notification', {
@@ -90,7 +97,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            subscription: pushSubscription,
+            subscription: currentSubscription,
             title,
             body,
             url: window.location.origin,

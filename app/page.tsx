@@ -67,7 +67,13 @@ export default function Home() {
 
   const checkPushNotificationStatus = async () => {
     const registration = await navigator.serviceWorker.ready
-    const subscription = await registration.pushManager.getSubscription()
+    let subscription = await registration.pushManager.getSubscription()
+    if (!subscription) {
+      const storedSubscription = localStorage.getItem('pushSubscription')
+      if (storedSubscription) {
+        subscription = JSON.parse(storedSubscription)
+      }
+    }
     setPushNotificationEnabled(!!subscription)
     setPushSubscription(subscription)
   }
@@ -83,6 +89,7 @@ export default function Home() {
       await pushSubscription?.unsubscribe()
       setPushNotificationEnabled(false)
       setPushSubscription(null)
+      localStorage.removeItem('pushSubscription')
       console.log('Push notification disabled')
     } else {
       try {
@@ -92,6 +99,7 @@ export default function Home() {
         })
         setPushNotificationEnabled(true)
         setPushSubscription(subscription)
+        localStorage.setItem('pushSubscription', JSON.stringify(subscription))
         console.log('Push notification enabled', subscription)
       } catch (error) {
         console.error('Failed to subscribe to push notifications', error)
