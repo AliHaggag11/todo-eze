@@ -283,21 +283,21 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
-              <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <li key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+              <div className="flex items-start space-x-3 min-w-0 flex-1 mb-2 sm:mb-0">
                 <input
                   type="checkbox"
                   checked={task.is_complete}
                   onChange={() => handleToggleTask(task)}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                  className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
                 <span className={`${
                   task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
-                } text-lg truncate`}>
+                } text-lg break-words`}>
                   {task.title}
                 </span>
               </div>
-              <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
+              <div className="flex items-center space-x-2 sm:ml-4 flex-shrink-0">
                 <Select
                   value={task.priority}
                   onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
