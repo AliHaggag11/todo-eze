@@ -249,24 +249,24 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <form onSubmit={handleAddTask} className="mb-6 space-y-2 sm:space-y-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+      <form onSubmit={handleAddTask} className="mb-6">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
             type="text"
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="Add a new task"
-            className="flex-grow text-gray-800 dark:text-gray-200 placeholder-gray-600 dark:placeholder-gray-400 mb-2 sm:mb-0"
+            className="flex-grow"
           />
-          <div className="flex space-x-2">
-            <Button type="submit" className="flex-grow sm:flex-grow-0 bg-blue-500 hover:bg-blue-600 text-white">
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-grow sm:flex-grow-0">
               <PlusIcon className="w-5 h-5 mr-1" /> Add
             </Button>
             <Button 
               type="button" 
               onClick={getAISuggestion} 
               disabled={isAiLoading}
-              className="flex-grow sm:flex-grow-0 bg-purple-500 hover:bg-purple-600 text-white"
+              className="flex-grow sm:flex-grow-0 bg-purple-500 hover:bg-purple-600"
             >
               {isAiLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -278,74 +278,77 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
           </div>
         </div>
       </form>
+      
       {tasks.length === 0 ? (
         <p className="text-center text-gray-700 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex flex-col sm:flex-row items-start justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
-              <div className="flex items-start space-x-3 min-w-0 flex-grow mb-2 sm:mb-0 sm:mr-4">
-                <input
-                  type="checkbox"
-                  checked={task.is_complete}
-                  onChange={() => handleToggleTask(task)}
-                  className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
-                />
-                <span className={`${
-                  task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
-                } text-lg break-words overflow-hidden`}>
-                  {task.title}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:space-x-2 flex-shrink-0 w-full sm:w-auto">
-                <Select
-                  value={task.priority}
-                  onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
-                >
-                  <SelectTrigger className="w-full sm:w-[90px]">
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={() => handleEditTask(task)}
-                      variant="outline"
-                      size="icon"
-                      className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
-                    >
-                      <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white dark:bg-gray-800 rounded-lg sm:max-w-[425px] max-w-[calc(100%-2rem)] mx-auto">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Edit Task</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleUpdateTask}>
-                      <Input
-                        value={editingTask?.title || ''}
-                        onChange={(e) => setEditingTask(prev => prev ? { ...prev, title: e.target.value } : null)}
-                        className="mb-4 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-                      />
-                      <DialogClose asChild>
-                        <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Update Task</Button>
-                      </DialogClose>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  onClick={() => handleDeleteTask(task.id)}
-                  variant="destructive"
-                  size="icon"
-                  className="hover:bg-red-600"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </Button>
+            <li key={task.id} className="bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+              <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-start flex-grow min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={task.is_complete}
+                    onChange={() => handleToggleTask(task)}
+                    className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                  />
+                  <span className={`${
+                    task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
+                  } text-lg ml-3 break-words`}>
+                    {task.title}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                  <Select
+                    value={task.priority}
+                    onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
+                  >
+                    <SelectTrigger className="w-[90px]">
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        onClick={() => handleEditTask(task)}
+                        variant="outline"
+                        size="icon"
+                        className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white dark:bg-gray-800 rounded-lg sm:max-w-[425px] max-w-[calc(100%-2rem)] mx-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Edit Task</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleUpdateTask}>
+                        <Input
+                          value={editingTask?.title || ''}
+                          onChange={(e) => setEditingTask(prev => prev ? { ...prev, title: e.target.value } : null)}
+                          className="mb-4 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                        />
+                        <DialogClose asChild>
+                          <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Update Task</Button>
+                        </DialogClose>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    onClick={() => handleDeleteTask(task.id)}
+                    variant="destructive"
+                    size="icon"
+                    className="hover:bg-red-600"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </li>
           ))}
