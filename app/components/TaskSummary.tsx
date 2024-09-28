@@ -10,12 +10,13 @@ interface TaskSummaryProps {
 
 export function TaskSummary({ userId }: TaskSummaryProps) {
   const [summary, setSummary] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDaily, setIsLoadingDaily] = useState(false);
+  const [isLoadingWeekly, setIsLoadingWeekly] = useState(false);
   const { toast } = useToast();
 
   const generateSummary = async (timeframe: 'daily' | 'weekly') => {
-    setIsLoading(true);
-    setSummary(null);
+    const setLoading = timeframe === 'daily' ? setIsLoadingDaily : setIsLoadingWeekly;
+    setLoading(true);
     try {
       const response = await fetch('/api/task-summary', {
         method: 'POST',
@@ -33,7 +34,7 @@ export function TaskSummary({ userId }: TaskSummaryProps) {
       console.error('Error generating summary:', error);
       toast({ title: "Error", description: "Failed to generate summary. Please try again.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -43,22 +44,22 @@ export function TaskSummary({ userId }: TaskSummaryProps) {
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <Button 
           onClick={() => generateSummary('daily')} 
-          disabled={isLoading}
+          disabled={isLoadingDaily || isLoadingWeekly}
           className="w-full sm:w-auto"
         >
-          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isLoadingDaily ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Generate Daily Summary
         </Button>
         <Button 
           onClick={() => generateSummary('weekly')} 
-          disabled={isLoading}
+          disabled={isLoadingDaily || isLoadingWeekly}
           className="w-full sm:w-auto"
         >
-          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isLoadingWeekly ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Generate Weekly Summary
         </Button>
       </div>
-      {isLoading && <p>Generating summary...</p>}
+      {(isLoadingDaily || isLoadingWeekly) && <p>Generating summary...</p>}
       {summary && (
         <div className="prose dark:prose-invert max-w-full">
           <ReactMarkdown>{summary}</ReactMarkdown>
