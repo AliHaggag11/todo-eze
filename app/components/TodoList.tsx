@@ -156,7 +156,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         supabase.removeChannel(channel);
       };
     }
-  }, [userId, supabase, handleRealTimeUpdate, toast]);
+  }, [userId, supabase, handleRealTimeUpdate, fetchTasks]);
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -187,7 +187,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }
 
   const handleDeleteTask = async (taskId: string) => {
-    // Immediately update local state
+    // Optimistically update local state
     setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
 
     const { error } = await supabase
@@ -196,14 +196,13 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .eq('id', taskId);
 
     if (error) {
-      // If there's an error, revert the local state change
       console.error('Error deleting task:', error);
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" });
-      // Fetch tasks again to ensure consistency
+      // Revert the optimistic update
       fetchTasks();
     } else {
-      // If successful, no need to do anything as the local state is already updated
       console.log('Task deleted successfully');
+      // The real-time subscription will handle updating other clients
     }
   }
 
