@@ -174,16 +174,16 @@ export default function TodoList() {
                 </DialogTrigger>
                 <DialogContent className="bg-white dark:bg-gray-800 rounded-lg sm:max-w-[425px] max-w-[calc(100%-2rem)] mx-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-fgray-900 dark:text-gray-800">Edit Task</DialogTitle>
+                    <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Edit Task</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleUpdateTask}>
                     <Input
                       value={editingTask?.title || ''}
                       onChange={(e) => setEditingTask(prev => prev ? { ...prev, title: e.target.value } : null)}
-                      className="mb-4 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400"
+                      className="mb-4 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                     />
                     <DialogClose asChild>
-                      <Button type="submit" className="w-full">Update Task</Button>
+                      <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">Update Task</Button>
                     </DialogClose>
                   </form>
                 </DialogContent>
