@@ -112,7 +112,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     }
   }, [sendPushNotification]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!userId) {
       console.log('No userId, skipping task fetch');
       return;
@@ -138,7 +138,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       setIsLoading(false);
       console.log('Task fetching complete');
     }
-  };
+  }, [userId, supabase, toast]);
 
   useEffect(() => {
     if (userId) {
