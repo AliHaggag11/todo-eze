@@ -136,27 +136,31 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         supabase.removeChannel(channel);
       };
     }
-  }, [userId, supabase]);
+  }, [userId, supabase, toast]);
 
   const handleRealTimeUpdate = async (payload: any) => {
     console.log('Change received!', payload);
     if (payload.eventType === 'INSERT') {
       setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
-      await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
+      if (payload.new.user_id !== userId) {
+        await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
+      }
     } else if (payload.eventType === 'UPDATE') {
       setTasks(currentTasks =>
         currentTasks.map(task =>
           task.id === payload.new.id ? (payload.new as Task) : task
         )
       );
-      if (payload.old.user_id !== userId) {
+      if (payload.new.user_id !== userId) {
         await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
       }
     } else if (payload.eventType === 'DELETE') {
       setTasks(currentTasks =>
         currentTasks.filter(task => task.id !== payload.old.id)
       );
-      await sendPushNotification('Task Deleted', `A task has been deleted`);
+      if (payload.old.user_id !== userId) {
+        await sendPushNotification('Task Deleted', `A task has been deleted`);
+      }
     }
   };
 
@@ -173,7 +177,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       } else {
         setNewTask('')
         setAiSuggestedPriority(null)
-        await sendPushNotification('New Task Added', `Task: ${data.title}`)
+        // Notification will be handled by the real-time subscription
       }
     }
   }
@@ -185,9 +189,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .eq('id', task.id)
     if (error) {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
-    } else {
-      sendPushNotification('Task Updated', `Task "${task.title}" marked as ${!task.is_complete ? 'complete' : 'incomplete'}`)
     }
+    // Notification will be handled by the real-time subscription
   }
 
   const handleDeleteTask = async (taskId: string) => {
@@ -197,11 +200,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .eq('id', taskId)
     if (error) {
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
-    } else {
-      // Remove the task from the local state immediately
-      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-      // The real-time update will handle the notification
     }
+    // The real-time subscription will handle updating the UI and sending notifications
   }
 
   const handleEditTask = (task: Task) => {
