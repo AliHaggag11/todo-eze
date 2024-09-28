@@ -14,6 +14,12 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/app/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/app/components/ui/tooltip"
 
 interface TodoListProps {
   pushSubscription: PushSubscription | null;
@@ -278,11 +284,20 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                   onChange={() => handleToggleTask(task)}
                   className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
-                <span className={`${
-                  task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
-                } text-lg truncate`}>
-                  {task.title}
-                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={`${
+                        task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
+                      } text-lg truncate max-w-[calc(100%-4rem)]`}>
+                        {task.title}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{task.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="flex space-x-2 ml-2 flex-shrink-0">
                 <Dialog>
