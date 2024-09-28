@@ -91,6 +91,10 @@ export default function Home() {
       setPushSubscription(null)
       localStorage.removeItem('pushSubscription')
       console.log('Push notification disabled')
+      await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_id', session?.user.id);
     } else {
       try {
         const subscription = await registration.pushManager.subscribe({
@@ -101,6 +105,11 @@ export default function Home() {
         setPushSubscription(subscription)
         localStorage.setItem('pushSubscription', JSON.stringify(subscription))
         console.log('Push notification enabled', subscription)
+
+        // Save the subscription to the database
+        await supabase
+          .from('push_subscriptions')
+          .upsert({ user_id: session?.user.id, subscription }, { onConflict: 'user_id' });
       } catch (error) {
         console.error('Failed to subscribe to push notifications', error)
       }
