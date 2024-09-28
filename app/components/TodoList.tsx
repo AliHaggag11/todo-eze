@@ -108,7 +108,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
     } else if (payload.eventType === 'DELETE') {
       console.log('Deleting task:', payload.old);
-      setTasks(currentTasks =>
+      setTasks(currentTasks => 
         currentTasks.filter(task => task.id !== payload.old.id)
       );
       await sendPushNotification('Task Deleted', `A task has been deleted`);
