@@ -167,11 +167,9 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim() && userId) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .insert({ title: newTask.trim(), user_id: userId, priority: aiSuggestedPriority || 'medium' })
-        .select()
-        .single()
       if (error) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
