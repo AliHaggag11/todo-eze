@@ -124,26 +124,26 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             console.log('Change received!', payload)
             if (payload.eventType === 'INSERT') {
               setTasks(currentTasks => [payload.new as Task, ...currentTasks])
-              // Send notification for all new tasks, including those created by the current user
               await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`)
+              updateGroupedTasks([payload.new as Task, ...tasks])
             } else if (payload.eventType === 'UPDATE') {
               setTasks(currentTasks =>
                 currentTasks.map(task =>
                   task.id === payload.new.id ? (payload.new as Task) : task
                 )
               )
-              // Only send notification if the task wasn't updated by the current user
               if (payload.old.user_id !== userId) {
                 await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`)
               }
+              updateGroupedTasks(tasks.map(task => task.id === payload.new.id ? (payload.new as Task) : task))
             } else if (payload.eventType === 'DELETE') {
               setTasks(currentTasks =>
                 currentTasks.filter(task => task.id !== payload.old.id)
               )
-              // Only send notification if the task wasn't deleted by the current user
               if (payload.old.user_id !== userId) {
                 await sendPushNotification('Task Deleted', `A task has been deleted`)
               }
+              updateGroupedTasks(tasks.filter(task => task.id !== payload.old.id))
             }
           }
         )
@@ -153,7 +153,26 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         supabase.removeChannel(channel)
       }
     }
-  }, [userId, supabase, sendPushNotification, toast])
+  }, [userId, supabase, sendPushNotification, toast, tasks])
+
+  const updateGroupedTasks = (updatedTasks: Task[]) => {
+    if (Object.keys(groupedTasks).length > 0) {
+      const updatedGroupedTasks = { ...groupedTasks };
+      Object.keys(updatedGroupedTasks).forEach(category => {
+        updatedGroupedTasks[category] = updatedGroupedTasks[category].filter(taskId => 
+          updatedTasks.some(task => task.id === taskId)
+        );
+      });
+      // Remove empty categories
+      Object.keys(updatedGroupedTasks).forEach(category => {
+        if (updatedGroupedTasks[category].length === 0) {
+          delete updatedGroupedTasks[category];
+        }
+      });
+      setGroupedTasks(updatedGroupedTasks);
+      localStorage.setItem('groupedTasks', JSON.stringify(updatedGroupedTasks));
+    }
+  };
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()

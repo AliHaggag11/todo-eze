@@ -27,14 +27,14 @@ const GroupedTasks: React.FC<GroupedTasksProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      {Object.entries(groupedTasks).map(([category, taskIds]) => (
-        <div key={category} className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
-          <h3 className="text-xl font-semibold mb-3">{category}</h3>
-          <ul className="space-y-3">
-            {taskIds.map(taskId => {
-              const task = tasks.find(t => t.id === taskId);
-              if (!task) return null; // Skip if task not found
-              return (
+      {Object.entries(groupedTasks).map(([category, taskIds]) => {
+        const categoryTasks = taskIds.map(id => tasks.find(t => t.id === id)).filter(Boolean) as Task[];
+        if (categoryTasks.length === 0) return null; // Don't render empty categories
+        return (
+          <div key={category} className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+            <h3 className="text-xl font-semibold mb-3">{category}</h3>
+            <ul className="space-y-3">
+              {categoryTasks.map(task => (
                 <li key={task.id} className="bg-white dark:bg-gray-600 rounded-md transition-all hover:shadow-md">
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex items-start flex-grow min-w-0">
@@ -102,11 +102,11 @@ const GroupedTasks: React.FC<GroupedTasksProps> = ({
                     </div>
                   </div>
                 </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </div>
   );
 };
