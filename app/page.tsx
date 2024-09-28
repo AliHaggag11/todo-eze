@@ -54,9 +54,12 @@ export default function Home() {
     }, 60000)
 
     // Check if push notifications are supported
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
       setPushNotificationSupported(true)
       checkPushNotificationStatus()
+    } else {
+      setPushNotificationSupported(false)
+      console.log('Push notifications are not supported in this browser');
     }
 
     return () => {
@@ -141,7 +144,7 @@ export default function Home() {
               <div className="flex justify-between items-center w-full">
                 <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
                 <div className="flex items-center space-x-2">
-                  {pushNotificationSupported && (
+                  {pushNotificationSupported ? (
                     <Button
                       onClick={handlePushNotificationToggle}
                       variant="outline"
@@ -156,7 +159,7 @@ export default function Home() {
                         {pushNotificationEnabled ? 'Disable' : 'Enable'} notifications
                       </span>
                     </Button>
-                  )}
+                  ) : null}
                   <Button 
                     onClick={handleLogout} 
                     variant="outline"

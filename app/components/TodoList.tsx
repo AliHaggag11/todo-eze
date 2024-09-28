@@ -28,6 +28,12 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const { toast } = useToast()
 
   const sendPushNotification = useCallback(async (title: string, body: string) => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      // Push notifications are not supported
+      console.log('Push notifications are not supported in this browser');
+      return;
+    }
+
     if (pushSubscription) {
       try {
         console.log('Attempting to send push notification', { title, body });
@@ -56,19 +62,18 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         console.log('Push notification sent successfully:', result);
       } catch (error) {
         console.error('Error sending push notification:', error);
+        // Only show toast for errors other than "not supported"
         toast({ 
           title: "Notification Error", 
           description: "Failed to send push notification. Please try again.", 
           variant: "destructive" 
         });
       }
+    } else if (Notification.permission === 'denied') {
+      console.log('Push notifications are blocked by the user');
     } else {
       console.log('Push subscription not available');
-      toast({ 
-        title: "Notification Error", 
-        description: "Push subscription is not available. Please enable notifications.", 
-        variant: "destructive" 
-      });
+      // Don't show the toast for unsupported browsers
     }
   }, [pushSubscription, toast]);
 
