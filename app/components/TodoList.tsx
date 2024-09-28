@@ -171,7 +171,7 @@ export default function TodoList() {
                     <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 rounded-lg mx-4 sm:mx-0">
+                <DialogContent className="bg-white dark:bg-gray-800 rounded-lg mx-4 sm:mx-0 w-[calc(100%-2rem)] sm:w-full max-w-lg">
                   <DialogHeader>
                     <DialogTitle className="text-gray-900 dark:text-gray-100">Edit Task</DialogTitle>
                   </DialogHeader>
@@ -179,7 +179,7 @@ export default function TodoList() {
                     <Input
                       value={editingTask?.title || ''}
                       onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                      className="mb-4 text-gray-900 dark:text-gray-600 placeholder-gray-600 dark:placeholder-gray-400"
+                      className="mb-4 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400"
                     />
                     <DialogClose asChild>
                       <Button type="submit" className="w-full">Update Task</Button>
