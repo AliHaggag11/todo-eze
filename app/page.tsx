@@ -53,13 +53,13 @@ export default function Home() {
         <Auth />
       ) : (
         <div className="container mx-auto px-4">
-          <header className="flex flex-col sm:flex-row justify-between items-center my-8 space-y-4 sm:space-y-0">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Collaborative Todo List</h1>
+          <header className="flex justify-between items-center my-8">
+            <h1 className="text-3xl font-bold text-black dark:text-white">Collaborative Todo List</h1>
             <Button 
               onClick={handleLogout} 
               variant="outline"
               disabled={isLoading}
-              className="w-full sm:w-auto"
+              className="ml-4"
             >
               {isLoading ? (
                 <>
