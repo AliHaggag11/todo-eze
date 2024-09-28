@@ -54,7 +54,7 @@ export default function Home() {
       ) : (
         <div className="container mx-auto px-4">
           <header className="flex justify-between items-center my-8">
-            <h1 className="text-3xl font-bold text-black dark:text-white">Collaborative Todo List</h1>
+            <h1 className="text-3xl font-bold text-white dark:text-white">Collaborative Todo List</h1>
             <Button 
               onClick={handleLogout} 
               variant="outline"
