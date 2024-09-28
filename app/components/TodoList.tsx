@@ -91,6 +91,32 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     fetchUser()
   }, [supabase.auth])
 
+  const handleRealTimeUpdate = useCallback(async (payload: any) => {
+    console.log('Change received!', payload);
+    if (payload.eventType === 'INSERT') {
+      setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
+      if (payload.new.user_id !== userId) {
+        await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
+      }
+    } else if (payload.eventType === 'UPDATE') {
+      setTasks(currentTasks =>
+        currentTasks.map(task =>
+          task.id === payload.new.id ? (payload.new as Task) : task
+        )
+      );
+      if (payload.new.user_id !== userId) {
+        await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
+      }
+    } else if (payload.eventType === 'DELETE') {
+      setTasks(currentTasks =>
+        currentTasks.filter(task => task.id !== payload.old.id)
+      );
+      if (payload.old.user_id !== userId) {
+        await sendPushNotification('Task Deleted', `A task has been deleted`);
+      }
+    }
+  }, [userId, sendPushNotification]);
+
   useEffect(() => {
     const fetchTasks = async () => {
       if (!userId) {
@@ -136,33 +162,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         supabase.removeChannel(channel);
       };
     }
-  }, [userId, supabase, toast]);
-
-  const handleRealTimeUpdate = async (payload: any) => {
-    console.log('Change received!', payload);
-    if (payload.eventType === 'INSERT') {
-      setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
-      if (payload.new.user_id !== userId) {
-        await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
-      }
-    } else if (payload.eventType === 'UPDATE') {
-      setTasks(currentTasks =>
-        currentTasks.map(task =>
-          task.id === payload.new.id ? (payload.new as Task) : task
-        )
-      );
-      if (payload.new.user_id !== userId) {
-        await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
-      }
-    } else if (payload.eventType === 'DELETE') {
-      setTasks(currentTasks =>
-        currentTasks.filter(task => task.id !== payload.old.id)
-      );
-      if (payload.old.user_id !== userId) {
-        await sendPushNotification('Task Deleted', `A task has been deleted`);
-      }
-    }
-  };
+  }, [userId, supabase, handleRealTimeUpdate, toast]);
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
