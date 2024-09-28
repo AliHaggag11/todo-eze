@@ -12,10 +12,18 @@ import { Loader2 } from 'lucide-react'
 
 const queryClient = new QueryClient()
 
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [userName, setUserName] = useState<string | null>(null)
+  const [greeting, setGreeting] = useState(getGreeting())
   const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
@@ -37,7 +45,15 @@ export default function Home() {
       setIsLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    // Update greeting every minute
+    const intervalId = setInterval(() => {
+      setGreeting(getGreeting())
+    }, 60000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearInterval(intervalId)
+    }
   }, [supabase.auth])
 
   const handleLogout = async () => {
@@ -81,7 +97,7 @@ export default function Home() {
             </div>
             {userName && (
               <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-                Hello, {userName}
+                {greeting}, {userName}
               </p>
             )}
           </header>
