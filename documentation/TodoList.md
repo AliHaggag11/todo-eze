@@ -26,3 +26,14 @@ This component manages the display and interaction with the todo list.
 - Implements optimistic updates for better user experience.
 - Uses shadcn/ui components for consistent styling.
 - Handles push notifications with proper browser support checks.
+
+## Features
+- ...existing features...
+- AI-Powered Task Summary: Generate daily or weekly summaries of tasks using AI.
+
+## Components
+- TodoList: Main component for managing tasks
+- TaskSummary: Component for generating and displaying AI-powered task summaries
+
+## API Routes
+- /api/task-summary: Generates AI-powered summaries of tasks

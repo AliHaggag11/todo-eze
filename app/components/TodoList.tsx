@@ -16,6 +16,7 @@ import {
 } from "@/app/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { RainbowButton } from '@/app/components/ui/rainbow-button'
+import { TaskSummary } from '@/app/components/TaskSummary'
 
 interface TodoListProps {
   pushSubscription: PushSubscription | null;
@@ -390,6 +391,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
           ))}
         </ul>
       )}
+      {userId && <TaskSummary userId={userId} />}
     </div>
   )
 }
