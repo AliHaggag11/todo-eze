@@ -93,67 +93,72 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }, [supabase.auth])
 
   useEffect(() => {
-    if (userId) {
-      const fetchTasks = async () => {
-        setIsLoading(true)
+    const fetchTasks = async () => {
+      if (!userId) return; // Don't fetch if there's no user ID
+
+      setIsLoading(true);
+      try {
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
-          .order('created_at', { ascending: false })
-        if (error) {
-          console.error('Error fetching tasks:', error)
-          toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" })
-        } else {
-          setTasks(data as Task[])
-          // Retrieve grouped tasks from local storage
-          const storedGroupedTasks = localStorage.getItem('groupedTasks');
-          if (storedGroupedTasks) {
-            setGroupedTasks(JSON.parse(storedGroupedTasks));
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        setTasks(data as Task[]);
+        
+        // Retrieve grouped tasks from local storage
+        const storedGroupedTasks = localStorage.getItem('groupedTasks');
+        if (storedGroupedTasks) {
+          setGroupedTasks(JSON.parse(storedGroupedTasks));
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTasks();
+
+    const channel = supabase
+      .channel('tasks_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks' },
+        async (payload) => {
+          console.log('Change received!', payload);
+          if (payload.eventType === 'INSERT') {
+            setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
+            await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
+            updateGroupedTasks([payload.new as Task, ...tasks]);
+          } else if (payload.eventType === 'UPDATE') {
+            setTasks(currentTasks =>
+              currentTasks.map(task =>
+                task.id === payload.new.id ? (payload.new as Task) : task
+              )
+            );
+            if (payload.old.user_id !== userId) {
+              await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
+            }
+            updateGroupedTasks(tasks.map(task => task.id === payload.new.id ? (payload.new as Task) : task));
+          } else if (payload.eventType === 'DELETE') {
+            setTasks(currentTasks =>
+              currentTasks.filter(task => task.id !== payload.old.id)
+            );
+            if (payload.old.user_id !== userId) {
+              await sendPushNotification('Task Deleted', `A task has been deleted`);
+            }
+            updateGroupedTasks(tasks.filter(task => task.id !== payload.old.id));
           }
         }
-        setIsLoading(false)
-      }
+      )
+      .subscribe();
 
-      fetchTasks()
-
-      const channel = supabase
-        .channel('tasks_changes')
-        .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'tasks' },
-          async (payload) => {
-            console.log('Change received!', payload)
-            if (payload.eventType === 'INSERT') {
-              setTasks(currentTasks => [payload.new as Task, ...currentTasks])
-              await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`)
-              updateGroupedTasks([payload.new as Task, ...tasks])
-            } else if (payload.eventType === 'UPDATE') {
-              setTasks(currentTasks =>
-                currentTasks.map(task =>
-                  task.id === payload.new.id ? (payload.new as Task) : task
-                )
-              )
-              if (payload.old.user_id !== userId) {
-                await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`)
-              }
-              updateGroupedTasks(tasks.map(task => task.id === payload.new.id ? (payload.new as Task) : task))
-            } else if (payload.eventType === 'DELETE') {
-              setTasks(currentTasks =>
-                currentTasks.filter(task => task.id !== payload.old.id)
-              )
-              if (payload.old.user_id !== userId) {
-                await sendPushNotification('Task Deleted', `A task has been deleted`)
-              }
-              updateGroupedTasks(tasks.filter(task => task.id !== payload.old.id))
-            }
-          }
-        )
-        .subscribe()
-
-      return () => {
-        supabase.removeChannel(channel)
-      }
-    }
-  }, [userId, supabase, sendPushNotification, toast, tasks])
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, supabase, sendPushNotification, toast, tasks]);
 
   const updateGroupedTasks = (updatedTasks: Task[]) => {
     if (Object.keys(groupedTasks).length > 0) {
