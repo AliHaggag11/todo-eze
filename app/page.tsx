@@ -78,12 +78,12 @@ export default function Home() {
       ) : (
         <div className="relative min-h-screen bg-white dark:bg-gray-900 overflow-hidden">
           <DotPattern
-            width={40}
-            height={40}
-            cx={1}
-            cy={1}
-            cr={1}
-            className="absolute inset-0 h-full w-full text-gray-200 dark:text-gray-800 opacity-30"
+            width={16}
+            height={16}
+            cx={0.5}
+            cy={0.5}
+            cr={0.5}
+            className="absolute inset-0 h-full w-full text-gray-200 dark:text-gray-800 opacity-50"
           />
           <div className="relative z-10 container mx-auto px-4">
             <header className="flex flex-col items-start my-8">
