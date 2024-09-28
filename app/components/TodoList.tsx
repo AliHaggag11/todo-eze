@@ -95,27 +95,21 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     console.log('Change received!', payload);
     if (payload.eventType === 'INSERT') {
       setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
-      if (payload.new.user_id !== userId) {
-        await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
-      }
+      await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
     } else if (payload.eventType === 'UPDATE') {
       setTasks(currentTasks =>
         currentTasks.map(task =>
           task.id === payload.new.id ? (payload.new as Task) : task
         )
       );
-      if (payload.new.user_id !== userId) {
-        await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
-      }
+      await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
     } else if (payload.eventType === 'DELETE') {
       setTasks(currentTasks =>
         currentTasks.filter(task => task.id !== payload.old.id)
       );
-      if (payload.old.user_id !== userId) {
-        await sendPushNotification('Task Deleted', `A task has been deleted`);
-      }
+      await sendPushNotification('Task Deleted', `A task has been deleted`);
     }
-  }, [userId, sendPushNotification]);
+  }, [sendPushNotification]);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -167,28 +161,38 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim() && userId) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .insert({ title: newTask.trim(), user_id: userId, priority: aiSuggestedPriority || 'medium' })
+        .select()
+        .single()
       if (error) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
         setAiSuggestedPriority(null)
+        // Update local state immediately
+        setTasks(currentTasks => [data as Task, ...currentTasks])
         // Notification will be handled by the real-time subscription
       }
     }
   }
 
   const handleToggleTask = async (task: Task) => {
+    const updatedTask = { ...task, is_complete: !task.is_complete };
     const { error } = await supabase
       .from('tasks')
-      .update({ is_complete: !task.is_complete })
+      .update(updatedTask)
       .eq('id', task.id)
     if (error) {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
+    } else {
+      // Update local state immediately
+      setTasks(currentTasks =>
+        currentTasks.map(t => t.id === task.id ? updatedTask : t)
+      )
+      // Notification will be handled by the real-time subscription
     }
-    // Notification will be handled by the real-time subscription
   }
 
   const handleDeleteTask = async (taskId: string) => {
@@ -198,8 +202,11 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .eq('id', taskId)
     if (error) {
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
+    } else {
+      // Update local state immediately
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId))
+      // Notification will be handled by the real-time subscription
     }
-    // The real-time subscription will handle updating the UI and sending notifications
   }
 
   const handleEditTask = (task: Task) => {
@@ -216,7 +223,12 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       if (error) {
         toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
       } else {
+        // Update local state immediately
+        setTasks(currentTasks =>
+          currentTasks.map(task => task.id === editingTask.id ? editingTask : task)
+        )
         setEditingTask(null)
+        // Notification will be handled by the real-time subscription
       }
     }
   }
@@ -252,7 +264,11 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     if (error) {
       toast({ title: "Error", description: "Failed to update task priority.", variant: "destructive" })
     } else {
-      sendPushNotification('Task Priority Updated', `A task priority has been updated to ${priority}`)
+      // Update local state immediately
+      setTasks(currentTasks =>
+        currentTasks.map(task => task.id === taskId ? { ...task, priority } : task)
+      )
+      // Notification will be handled by the real-time subscription
     }
   }
 
