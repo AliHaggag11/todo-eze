@@ -9,6 +9,7 @@ import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import { Button } from '@/app/components/ui/button'
 import { Loader2 } from 'lucide-react'
+import DotPattern from '@/app/components/magicui/dot-pattern'  // Add this import
 
 const queryClient = new QueryClient()
 
@@ -75,33 +76,43 @@ export default function Home() {
       {!session ? (
         <Auth />
       ) : (
-        <div className="container mx-auto px-4">
-          <header className="flex flex-col items-start my-8">
-            <div className="flex justify-between items-center w-full">
-              <h1 className="text-3xl font-bold text-gray-600 dark:text-white">Collaborative Todo List</h1>
-              <Button 
-                onClick={handleLogout} 
-                variant="outline"
-                disabled={isLoading}
-                className="ml-4"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging out...
-                  </>
-                ) : (
-                  'Logout'
-                )}
-              </Button>
-            </div>
-            {userName && (
-              <p className="text-lg text-blue-400 dark:text-blue-300 mt-3 font-medium">
-                {greeting}, {userName}
-              </p>
-            )}
-          </header>
-          <TodoList />
+        <div className="relative min-h-screen bg-white dark:bg-gray-900 overflow-hidden">
+          <DotPattern
+            width={40}
+            height={40}
+            cx={1}
+            cy={1}
+            cr={1}
+            className="absolute inset-0 h-full w-full text-gray-200 dark:text-gray-800 opacity-30"
+          />
+          <div className="relative z-10 container mx-auto px-4">
+            <header className="flex flex-col items-start my-8">
+              <div className="flex justify-between items-center w-full">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Collaborative Todo List</h1>
+                <Button 
+                  onClick={handleLogout} 
+                  variant="outline"
+                  disabled={isLoading}
+                  className="ml-4"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging out...
+                    </>
+                  ) : (
+                    'Logout'
+                  )}
+                </Button>
+              </div>
+              {userName && (
+                <p className="text-lg text-blue-600 dark:text-blue-400 mt-3 font-medium">
+                  {greeting}, {userName}
+                </p>
+              )}
+            </header>
+            <TodoList />
+          </div>
         </div>
       )}
     </QueryClientProvider>
