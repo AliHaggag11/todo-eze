@@ -283,8 +283,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
-              <div className="flex items-start space-x-3 min-w-0 flex-1 mb-2 sm:mb-0">
+            <li key={task.id} className="flex flex-col sm:flex-row items-start justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+              <div className="flex items-start space-x-3 min-w-0 flex-grow mb-2 sm:mb-0 sm:mr-4">
                 <input
                   type="checkbox"
                   checked={task.is_complete}
@@ -293,16 +293,16 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                 />
                 <span className={`${
                   task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
-                } text-lg break-words`}>
+                } text-lg break-words overflow-hidden`}>
                   {task.title}
                 </span>
               </div>
-              <div className="flex items-center space-x-2 sm:ml-4 flex-shrink-0">
+              <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:space-x-2 flex-shrink-0 w-full sm:w-auto">
                 <Select
                   value={task.priority}
                   onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
                 >
-                  <SelectTrigger className="w-[90px]">
+                  <SelectTrigger className="w-full sm:w-[90px]">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
