@@ -2,7 +2,7 @@ import React from "react";
 import { Button, ButtonProps } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export interface RainbowButtonProps extends ButtonProps {}
+export type RainbowButtonProps = ButtonProps;
 
 export function RainbowButton({ className, ...props }: RainbowButtonProps) {
   return (
