@@ -139,32 +139,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         .channel('tasks_changes')
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${userId}` },
-          async (payload) => {
-            console.log('Change received!', payload);
-            if (payload.eventType === 'INSERT') {
-              setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
-              await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
-              updateGroupedTasks([payload.new as Task, ...tasks]);
-            } else if (payload.eventType === 'UPDATE') {
-              setTasks(currentTasks =>
-                currentTasks.map(task =>
-                  task.id === payload.new.id ? (payload.new as Task) : task
-                )
-              );
-              if (payload.old.user_id !== userId) {
-                await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
-              }
-              updateGroupedTasks(tasks.map(task => task.id === payload.new.id ? (payload.new as Task) : task));
-            } else if (payload.eventType === 'DELETE') {
-              setTasks(currentTasks =>
-                currentTasks.filter(task => task.id !== payload.old.id)
-              );
-              if (payload.old.user_id !== userId) {
-                await sendPushNotification('Task Deleted', `A task has been deleted`);
-              }
-              updateGroupedTasks(tasks.filter(task => task.id !== payload.old.id));
-            }
-          }
+          handleRealTimeUpdate
         )
         .subscribe();
 
@@ -173,7 +148,34 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         supabase.removeChannel(channel);
       };
     }
-  }, [userId, supabase, sendPushNotification, toast, tasks]);
+  }, [userId, supabase]);
+
+  const handleRealTimeUpdate = async (payload: any) => {
+    console.log('Change received!', payload);
+    if (payload.eventType === 'INSERT') {
+      setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
+      await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
+      updateGroupedTasks([payload.new as Task, ...tasks]);
+    } else if (payload.eventType === 'UPDATE') {
+      setTasks(currentTasks =>
+        currentTasks.map(task =>
+          task.id === payload.new.id ? (payload.new as Task) : task
+        )
+      );
+      if (payload.old.user_id !== userId) {
+        await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
+      }
+      updateGroupedTasks(tasks.map(task => task.id === payload.new.id ? (payload.new as Task) : task));
+    } else if (payload.eventType === 'DELETE') {
+      setTasks(currentTasks =>
+        currentTasks.filter(task => task.id !== payload.old.id)
+      );
+      if (payload.old.user_id !== userId) {
+        await sendPushNotification('Task Deleted', `A task has been deleted`);
+      }
+      updateGroupedTasks(tasks.filter(task => task.id !== payload.old.id));
+    }
+  };
 
   const updateGroupedTasks = (updatedTasks: Task[]) => {
     if (Object.keys(groupedTasks).length > 0) {
