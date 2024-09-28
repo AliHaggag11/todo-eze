@@ -15,6 +15,7 @@ import {
   DialogClose,
 } from "@/app/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
+import GroupedTasks from './GroupedTasks'
 
 interface TodoListProps {
   pushSubscription: PushSubscription | null;
@@ -30,6 +31,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [aiSuggestedPriority, setAiSuggestedPriority] = useState<'low' | 'medium' | 'high' | null>(null)
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
+  const [groupedTasks, setGroupedTasks] = useState<Record<string, number[]>>({})
+  const [isGrouping, setIsGrouping] = useState(false)
 
   const sendPushNotification = useCallback(async (title: string, body: string) => {
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -245,6 +248,24 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     }
   }
 
+  const groupTasks = async () => {
+    setIsGrouping(true)
+    try {
+      const response = await fetch('/api/group-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks }),
+      });
+      const groupings = await response.json();
+      setGroupedTasks(groupings);
+    } catch (error) {
+      console.error('Error grouping tasks:', error);
+      toast({ title: "Error", description: "Failed to group tasks. Please try again.", variant: "destructive" });
+    } finally {
+      setIsGrouping(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -285,8 +306,24 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         </div>
       </form>
       
+      <div className="mb-4 flex justify-end">
+        <Button onClick={groupTasks} disabled={isGrouping}>
+          {isGrouping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+          {isGrouping ? 'Grouping...' : 'Group Tasks'}
+        </Button>
+      </div>
+
       {tasks.length === 0 ? (
         <p className="text-center text-gray-700 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
+      ) : Object.keys(groupedTasks).length > 0 ? (
+        <GroupedTasks
+          groupedTasks={groupedTasks}
+          tasks={tasks}
+          onToggleTask={handleToggleTask}
+          onUpdateTaskPriority={handleUpdateTaskPriority}
+          onEditTask={handleEditTask}
+          onDeleteTask={handleDeleteTask}
+        />
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
