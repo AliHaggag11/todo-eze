@@ -161,19 +161,15 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim() && userId) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .insert({ title: newTask.trim(), user_id: userId, priority: aiSuggestedPriority || 'medium' })
-        .select()
-        .single()
       if (error) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
         setAiSuggestedPriority(null)
-        // Update local state immediately
-        setTasks(currentTasks => [data as Task, ...currentTasks])
-        // Notification will be handled by the real-time subscription
+        // The real-time subscription will handle updating the UI
       }
     }
   }
@@ -186,31 +182,19 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .eq('id', task.id)
     if (error) {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
-    } else {
-      // Update local state immediately
-      setTasks(currentTasks =>
-        currentTasks.map(t => t.id === task.id ? updatedTask : t)
-      )
-      // Notification will be handled by the real-time subscription
     }
+    // The real-time subscription will handle updating the UI
   }
 
   const handleDeleteTask = async (taskId: string) => {
-    // Update local state immediately
-    setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', taskId);
-
+      .eq('id', taskId)
     if (error) {
-      // If there's an error, revert the local state change
-      toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" });
-      // Fetch tasks again to ensure consistency
-      fetchTasks();
+      toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
     }
-    // The real-time subscription will handle updating other clients and sending notifications
+    // The real-time subscription will handle updating the UI
   }
 
   const handleEditTask = (task: Task) => {
@@ -227,12 +211,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       if (error) {
         toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
       } else {
-        // Update local state immediately
-        setTasks(currentTasks =>
-          currentTasks.map(task => task.id === editingTask.id ? editingTask : task)
-        )
         setEditingTask(null)
-        // Notification will be handled by the real-time subscription
+        // The real-time subscription will handle updating the UI
       }
     }
   }
@@ -267,13 +247,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .eq('id', taskId)
     if (error) {
       toast({ title: "Error", description: "Failed to update task priority.", variant: "destructive" })
-    } else {
-      // Update local state immediately
-      setTasks(currentTasks =>
-        currentTasks.map(task => task.id === taskId ? { ...task, priority } : task)
-      )
-      // Notification will be handled by the real-time subscription
     }
+    // The real-time subscription will handle updating the UI
   }
 
   if (isLoading) {
