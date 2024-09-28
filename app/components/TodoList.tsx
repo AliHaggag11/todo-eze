@@ -174,7 +174,7 @@ export default function TodoList() {
                 </DialogTrigger>
                 <DialogContent className="bg-white dark:bg-gray-800 rounded-lg sm:max-w-[425px] max-w-[calc(100%-2rem)] mx-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-fgray-900 dark:text-gray-100">Edit Task</DialogTitle>
+                    <DialogTitle className="text-fgray-900 dark:text-gray-800">Edit Task</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleUpdateTask}>
                     <Input
