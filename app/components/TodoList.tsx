@@ -14,6 +14,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/app/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 
 interface TodoListProps {
   pushSubscription: PushSubscription | null;
@@ -150,7 +151,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     if (newTask.trim() && userId) {
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ title: newTask.trim(), user_id: userId })
+        .insert({ title: newTask.trim(), user_id: userId, priority: 'medium' })
         .select()
         .single()
       if (error) {
@@ -226,6 +227,18 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     }
   };
 
+  const handleUpdateTaskPriority = async (taskId: string, priority: 'low' | 'medium' | 'high') => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ priority })
+      .eq('id', taskId)
+    if (error) {
+      toast({ title: "Error", description: "Failed to update task priority.", variant: "destructive" })
+    } else {
+      sendPushNotification('Task Priority Updated', `A task priority has been updated to ${priority}`)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -285,6 +298,19 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                 </span>
               </div>
               <div className="flex space-x-2 ml-2 flex-shrink-0">
+                <Select
+                  value={task.priority}
+                  onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button

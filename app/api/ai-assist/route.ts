@@ -13,10 +13,11 @@ export async function POST(req: Request) {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const result = await model.generateContent(`
-      Given these tasks: ${prompt}
+      Given these tasks with priorities: ${prompt}
       Suggest a new, different task that might logically come next or complement the existing tasks.
-      The suggestion should be short (max 10 words) and not repeat or rephrase existing tasks.
+      The suggestion should be short (max 10 words) and include a recommended priority (low, medium, or high).
       Focus on potential follow-up actions or related but distinct tasks.
+      Format the response as: "Task: [task description] | Priority: [priority]"
     `);
     const response = await result.response;
     const text = response.text().trim();
