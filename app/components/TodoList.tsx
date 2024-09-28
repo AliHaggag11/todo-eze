@@ -131,6 +131,13 @@ export default function TodoList() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Collaborative Todo List</h1>
+        <Button variant="outline" onClick={() => {/* Add logout logic here */}}>
+          Logout
+        </Button>
+      </header>
+      
       <form onSubmit={handleAddTask} className="mb-6">
         <div className="flex items-center space-x-2">
           <Input
@@ -171,7 +178,7 @@ export default function TodoList() {
                     <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 rounded-lg mx-4 sm:mx-0 w-[calc(100%-2rem)] sm:w-full max-w-lg">
+                <DialogContent className="bg-white dark:bg-gray-800 rounded-lg sm:max-w-[425px] max-w-[calc(100%-2rem)] mx-auto">
                   <DialogHeader>
                     <DialogTitle className="text-gray-900 dark:text-gray-100">Edit Task</DialogTitle>
                   </DialogHeader>
