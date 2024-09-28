@@ -20,52 +20,27 @@ webPush.setVapidDetails(
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export async function POST(req: Request) {
-  const { title, body, url } = await req.json();
-
   try {
-    console.log('Sending notification', { title, body, url });
+    const { subscription, title, body, url } = await req.json();
+    console.log('Received notification request', { subscription, title, body, url });
 
-    // Fetch all push subscriptions from the database
-    const { data: subscriptions, error } = await supabase
-      .from('push_subscriptions')
-      .select('*');
-
-    if (error) {
-      throw new Error('Failed to fetch push subscriptions: ' + error.message);
+    if (!subscription) {
+      throw new Error('No subscription provided');
     }
 
-    if (!subscriptions) {
-      throw new Error('No subscriptions found');
-    }
-
-    // Send notifications to all subscribed clients
-    const notificationPromises = subscriptions.map(async (sub) => {
-      try {
-        await webPush.sendNotification(
-          sub.subscription,
-          JSON.stringify({ title, body, url })
-        );
-      } catch (error: any) {
-        console.error('Error sending push notification:', error);
-        // If the subscription is invalid, remove it from the database
-        if (error.statusCode === 410) {
-          await supabase
-            .from('push_subscriptions')
-            .delete()
-            .eq('id', sub.id);
-        }
-      }
-    });
-
-    await Promise.all(notificationPromises);
+    // Send notification to the specific subscription
+    await webPush.sendNotification(
+      subscription,
+      JSON.stringify({ title, body, url })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error('Error sending push notifications:', error);
+    console.error('Error in POST handler:', error);
     if (error instanceof Error) {
-      return NextResponse.json({ success: false, error: 'Failed to send notifications', details: error.message }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Failed to send notification', details: error.message }, { status: 400 });
     } else {
-      return NextResponse.json({ success: false, error: 'Failed to send notifications', details: 'Unknown error' }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Failed to send notification', details: 'Unknown error' }, { status: 400 });
     }
   }
 }

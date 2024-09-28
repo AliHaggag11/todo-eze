@@ -109,7 +109,7 @@ export default function Home() {
         // Save the subscription to the database
         await supabase
           .from('push_subscriptions')
-          .upsert({ user_id: session?.user.id, subscription }, { onConflict: 'user_id' });
+          .upsert({ user_id: session?.user.id, subscription: JSON.parse(JSON.stringify(subscription)) }, { onConflict: 'user_id' });
       } catch (error) {
         console.error('Failed to subscribe to push notifications', error)
       }
