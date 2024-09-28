@@ -93,11 +93,13 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }, [supabase.auth])
 
   const handleRealTimeUpdate = useCallback(async (payload: any) => {
-    console.log('Change received!', payload);
+    console.log('Real-time update received:', payload);
     if (payload.eventType === 'INSERT') {
+      console.log('Inserting new task:', payload.new);
       setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
       await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
     } else if (payload.eventType === 'UPDATE') {
+      console.log('Updating task:', payload.new);
       setTasks(currentTasks =>
         currentTasks.map(task =>
           task.id === payload.new.id ? (payload.new as Task) : task
@@ -105,6 +107,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       );
       await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
     } else if (payload.eventType === 'DELETE') {
+      console.log('Deleting task:', payload.old);
       setTasks(currentTasks =>
         currentTasks.filter(task => task.id !== payload.old.id)
       );
@@ -189,6 +192,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
+      console.log('Attempting to delete task:', taskId);
       const { error } = await supabase
         .from('tasks')
         .delete()
@@ -198,9 +202,9 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         throw error;
       }
 
+      console.log('Task deleted successfully:', taskId);
       // We don't need to update the local state here.
       // The real-time subscription will handle updating the UI for all clients.
-      console.log('Task deleted successfully');
     } catch (error) {
       console.error('Error deleting task:', error);
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" });
