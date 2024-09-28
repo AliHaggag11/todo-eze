@@ -38,17 +38,25 @@ export function TaskSummary({ userId }: TaskSummaryProps) {
   return (
     <div className="mt-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
       <h2 className="text-2xl font-bold mb-4">Task Summary</h2>
-      <div className="flex gap-2 mb-4">
-        <Button onClick={() => generateSummary('daily')} disabled={isLoading}>
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <Button 
+          onClick={() => generateSummary('daily')} 
+          disabled={isLoading}
+          className="w-full sm:w-auto"
+        >
           Generate Daily Summary
         </Button>
-        <Button onClick={() => generateSummary('weekly')} disabled={isLoading}>
+        <Button 
+          onClick={() => generateSummary('weekly')} 
+          disabled={isLoading}
+          className="w-full sm:w-auto"
+        >
           Generate Weekly Summary
         </Button>
       </div>
       {isLoading && <p>Generating summary...</p>}
       {summary && (
-        <div className="prose dark:prose-invert">
+        <div className="prose dark:prose-invert max-w-full">
           <ReactMarkdown>{summary}</ReactMarkdown>
         </div>
       )}
