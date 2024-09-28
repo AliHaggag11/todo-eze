@@ -30,8 +30,18 @@ export async function POST(req: Request) {
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const groupings = JSON.parse(response.text());
-    console.log('Generated groupings:', groupings);
+    const responseText = response.text().trim();
+    console.log('Raw AI response:', responseText);
+
+    let groupings;
+    try {
+      groupings = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse AI response as JSON:', parseError);
+      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 500 });
+    }
+
+    console.log('Parsed groupings:', groupings);
     return NextResponse.json(groupings);
   } catch (error) {
     console.error('Error in task grouping:', error);
