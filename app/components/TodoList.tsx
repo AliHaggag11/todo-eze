@@ -15,7 +15,11 @@ import {
   DialogClose,
 } from "@/app/components/ui/dialog"
 
-export default function TodoList() {
+interface TodoListProps {
+  pushSubscription: PushSubscription | null;
+}
+
+export default function TodoList({ pushSubscription }: TodoListProps) {
   const [newTask, setNewTask] = useState('')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -76,6 +80,27 @@ export default function TodoList() {
     }
   }, [userId, supabase])
 
+  const sendPushNotification = async (title: string, body: string) => {
+    if (pushSubscription) {
+      try {
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            subscription: pushSubscription,
+            title,
+            body,
+            url: window.location.origin,
+          }),
+        });
+      } catch (error) {
+        console.error('Error sending push notification:', error);
+      }
+    }
+  };
+
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim() && userId) {
@@ -86,6 +111,7 @@ export default function TodoList() {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
+        sendPushNotification('New Task Added', `Task: ${newTask.trim()}`)
       }
     }
   }
@@ -97,6 +123,8 @@ export default function TodoList() {
       .eq('id', task.id)
     if (error) {
       toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
+    } else {
+      sendPushNotification('Task Updated', `Task "${task.title}" marked as ${!task.is_complete ? 'complete' : 'incomplete'}`)
     }
   }
 
@@ -107,6 +135,8 @@ export default function TodoList() {
       .eq('id', taskId)
     if (error) {
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
+    } else {
+      sendPushNotification('Task Deleted', `A task has been deleted`)
     }
   }
 
@@ -125,6 +155,7 @@ export default function TodoList() {
         toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
       } else {
         setEditingTask(null)
+        sendPushNotification('Task Updated', `Task updated to: ${editingTask.title}`)
       }
     }
   }

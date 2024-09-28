@@ -8,7 +8,7 @@ import { Database } from '@/lib/database.types'
 import Auth from './components/Auth'
 import TodoList from './components/TodoList'
 import { Button } from '@/app/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Bell, BellOff } from 'lucide-react'
 
 const queryClient = new QueryClient()
 
@@ -24,6 +24,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
   const [userName, setUserName] = useState<string | null>(null)
   const [greeting, setGreeting] = useState(getGreeting())
+  const [pushNotificationSupported, setPushNotificationSupported] = useState(false)
+  const [pushNotificationEnabled, setPushNotificationEnabled] = useState(false)
+  const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null)
   const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
@@ -50,11 +53,45 @@ export default function Home() {
       setGreeting(getGreeting())
     }, 60000)
 
+    // Check if push notifications are supported
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setPushNotificationSupported(true)
+      checkPushNotificationStatus()
+    }
+
     return () => {
       subscription.unsubscribe()
       clearInterval(intervalId)
     }
   }, [supabase.auth])
+
+  const checkPushNotificationStatus = async () => {
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.getSubscription()
+    setPushNotificationEnabled(!!subscription)
+    setPushSubscription(subscription)
+  }
+
+  const handlePushNotificationToggle = async () => {
+    if (Notification.permission !== 'granted') {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') return
+    }
+
+    const registration = await navigator.serviceWorker.ready
+    if (pushNotificationEnabled) {
+      await pushSubscription?.unsubscribe()
+      setPushNotificationEnabled(false)
+      setPushSubscription(null)
+    } else {
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      })
+      setPushNotificationEnabled(true)
+      setPushSubscription(subscription)
+    }
+  }
 
   const handleLogout = async () => {
     setIsLoading(true)
@@ -80,21 +117,38 @@ export default function Home() {
             <header className="flex flex-col items-start mb-8">
               <div className="flex justify-between items-center w-full">
                 <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
-                <Button 
-                  onClick={handleLogout} 
-                  variant="outline"
-                  disabled={isLoading}
-                  className="ml-4"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Logging out...
-                    </>
-                  ) : (
-                    'Logout'
+                <div className="flex items-center space-x-2">
+                  {pushNotificationSupported && (
+                    <Button
+                      onClick={handlePushNotificationToggle}
+                      variant="outline"
+                      size="icon"
+                    >
+                      {pushNotificationEnabled ? (
+                        <Bell className="h-[1.2rem] w-[1.2rem]" />
+                      ) : (
+                        <BellOff className="h-[1.2rem] w-[1.2rem]" />
+                      )}
+                      <span className="sr-only">
+                        {pushNotificationEnabled ? 'Disable' : 'Enable'} notifications
+                      </span>
+                    </Button>
                   )}
-                </Button>
+                  <Button 
+                    onClick={handleLogout} 
+                    variant="outline"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Logging out...
+                      </>
+                    ) : (
+                      'Logout'
+                    )}
+                  </Button>
+                </div>
               </div>
               {userName && (
                 <p className="text-lg text-blue-600 dark:text-blue-400 mt-3 font-medium">
@@ -102,7 +156,7 @@ export default function Home() {
                 </p>
               )}
             </header>
-            <TodoList />
+            <TodoList pushSubscription={pushSubscription} />
           </div>
         </div>
       )}
