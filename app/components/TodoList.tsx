@@ -25,7 +25,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [userId, setUserId] = useState<string | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [aiSuggestion, setAiSuggestion] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
