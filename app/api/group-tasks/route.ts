@@ -24,21 +24,26 @@ export async function POST(req: Request) {
       
       Group these tasks into 3-5 logical categories or projects. Respond with a JSON object where keys are category names and values are arrays of task indices (0-based).
       For example: {"Work": [0, 2], "Personal": [1, 3], "Health": [4]}
+      
+      Important: Provide only the JSON object as your response, without any additional text or formatting.
     `;
 
     console.log('Generated prompt:', prompt);
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const responseText = response.text().trim();
+    let responseText = response.text().trim();
     console.log('Raw AI response:', responseText);
+
+    // Remove any markdown formatting
+    responseText = responseText.replace(/```json\n?|\n?```/g, '').trim();
 
     let groupings;
     try {
       groupings = JSON.parse(responseText);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 500 });
+      return NextResponse.json({ error: 'Invalid AI response format', rawResponse: responseText }, { status: 500 });
     }
 
     console.log('Parsed groupings:', groupings);
