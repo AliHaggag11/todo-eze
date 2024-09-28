@@ -15,7 +15,6 @@ import {
   DialogClose,
 } from "@/app/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import GroupedTasks from './GroupedTasks'
 
 interface TodoListProps {
   pushSubscription: PushSubscription | null;
@@ -31,12 +30,9 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [aiSuggestedPriority, setAiSuggestedPriority] = useState<'low' | 'medium' | 'high' | null>(null)
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
-  const [groupedTasks, setGroupedTasks] = useState<Record<string, string[]>>({})
-  const [isGrouping, setIsGrouping] = useState(false)
 
   const sendPushNotification = useCallback(async (title: string, body: string) => {
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-      // Push notifications are not supported
       console.log('Push notifications are not supported in this browser');
       return;
     }
@@ -69,7 +65,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         console.log('Push notification sent successfully:', result);
       } catch (error) {
         console.error('Error sending push notification:', error);
-        // Only show toast for errors other than "not supported"
         toast({ 
           title: "Notification Error", 
           description: "Failed to send push notification. Please try again.", 
@@ -80,7 +75,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       console.log('Push notifications are blocked by the user');
     } else {
       console.log('Push subscription not available');
-      // Don't show the toast for unsupported browsers
     }
   }, [pushSubscription, toast]);
 
@@ -117,12 +111,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
 
         console.log('Fetched tasks:', data);
         setTasks(data as Task[]);
-        
-        // Retrieve grouped tasks from local storage
-        const storedGroupedTasks = localStorage.getItem('groupedTasks');
-        if (storedGroupedTasks) {
-          setGroupedTasks(JSON.parse(storedGroupedTasks));
-        }
       } catch (error) {
         console.error('Error fetching tasks:', error);
         toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" });
@@ -155,7 +143,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     if (payload.eventType === 'INSERT') {
       setTasks(currentTasks => [payload.new as Task, ...currentTasks]);
       await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`);
-      updateGroupedTasks([payload.new as Task, ...tasks]);
     } else if (payload.eventType === 'UPDATE') {
       setTasks(currentTasks =>
         currentTasks.map(task =>
@@ -165,7 +152,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       if (payload.old.user_id !== userId) {
         await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`);
       }
-      updateGroupedTasks(tasks.map(task => task.id === payload.new.id ? (payload.new as Task) : task));
     } else if (payload.eventType === 'DELETE') {
       setTasks(currentTasks =>
         currentTasks.filter(task => task.id !== payload.old.id)
@@ -173,26 +159,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       if (payload.old.user_id !== userId) {
         await sendPushNotification('Task Deleted', `A task has been deleted`);
       }
-      updateGroupedTasks(tasks.filter(task => task.id !== payload.old.id));
-    }
-  };
-
-  const updateGroupedTasks = (updatedTasks: Task[]) => {
-    if (Object.keys(groupedTasks).length > 0) {
-      const updatedGroupedTasks = { ...groupedTasks };
-      Object.keys(updatedGroupedTasks).forEach(category => {
-        updatedGroupedTasks[category] = updatedGroupedTasks[category].filter(taskId => 
-          updatedTasks.some(task => task.id === taskId)
-        );
-      });
-      // Remove empty categories
-      Object.keys(updatedGroupedTasks).forEach(category => {
-        if (updatedGroupedTasks[category].length === 0) {
-          delete updatedGroupedTasks[category];
-        }
-      });
-      setGroupedTasks(updatedGroupedTasks);
-      localStorage.setItem('groupedTasks', JSON.stringify(updatedGroupedTasks));
     }
   };
 
@@ -208,8 +174,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
-        setAiSuggestedPriority(null) // Reset the AI suggested priority
-        // Send notification for task creation
+        setAiSuggestedPriority(null)
         await sendPushNotification('New Task Added', `Task: ${data.title}`)
       }
     }
@@ -271,7 +236,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         const [taskTitle, priorityPart] = data.result.split('|');
         const suggestedPriority = priorityPart.split(':')[1].trim().toLowerCase();
         setNewTask(taskTitle.split(':')[1].trim());
-        // Store the suggested priority
         setAiSuggestedPriority(suggestedPriority as 'low' | 'medium' | 'high');
       }
     } catch (error) {
@@ -293,39 +257,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       sendPushNotification('Task Priority Updated', `A task priority has been updated to ${priority}`)
     }
   }
-
-  const groupTasks = async () => {
-    setIsGrouping(true);
-    try {
-      console.log('Tasks being sent:', tasks);
-      const response = await fetch('/api/group-tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tasks }),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-      }
-      const groupings = await response.json();
-      console.log('Received groupings:', groupings);
-      // Convert task indices to task IDs
-      const groupedTaskIds = Object.fromEntries(
-        Object.entries(groupings).map(([category, indices]) => [
-          category,
-          (indices as number[]).map((index: number) => tasks[index].id)
-        ])
-      );
-      setGroupedTasks(groupedTaskIds);
-      // Store grouped tasks in local storage
-      localStorage.setItem('groupedTasks', JSON.stringify(groupedTaskIds));
-    } catch (error) {
-      console.error('Error grouping tasks:', error);
-      toast({ title: "Error", description: "Failed to group tasks. Please try again.", variant: "destructive" });
-    } finally {
-      setIsGrouping(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -370,25 +301,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         </div>
       </form>
       
-      <div className="mb-4 flex justify-end">
-        <Button onClick={groupTasks} disabled={isGrouping}>
-          {isGrouping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-          {isGrouping ? 'Grouping...' : 'Group Tasks'}
-        </Button>
-      </div>
-
       {tasks.length === 0 ? (
         <p className="text-center text-gray-700 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
-      ) : Object.keys(groupedTasks).length > 0 ? (
-        <GroupedTasks
-          groupedTasks={groupedTasks}
-          tasks={tasks}
-          onToggleTask={handleToggleTask}
-          onUpdateTaskPriority={handleUpdateTaskPriority}
-          onEditTask={setEditingTask}
-          onDeleteTask={handleDeleteTask}
-          onUpdateTask={handleUpdateTask}
-        />
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
