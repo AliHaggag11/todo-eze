@@ -31,7 +31,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [aiSuggestedPriority, setAiSuggestedPriority] = useState<'low' | 'medium' | 'high' | null>(null)
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
-  const [groupedTasks, setGroupedTasks] = useState<Record<string, number[]>>({})
+  const [groupedTasks, setGroupedTasks] = useState<Record<string, string[]>>({})
   const [isGrouping, setIsGrouping] = useState(false)
 
   const sendPushNotification = useCallback(async (title: string, body: string) => {
@@ -105,6 +105,11 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
           toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" })
         } else {
           setTasks(data as Task[])
+          // Retrieve grouped tasks from local storage
+          const storedGroupedTasks = localStorage.getItem('groupedTasks');
+          if (storedGroupedTasks) {
+            setGroupedTasks(JSON.parse(storedGroupedTasks));
+          }
         }
         setIsLoading(false)
       }
@@ -263,7 +268,16 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       }
       const groupings = await response.json();
       console.log('Received groupings:', groupings);
-      setGroupedTasks(groupings);
+      // Convert task indices to task IDs
+      const groupedTaskIds = Object.fromEntries(
+        Object.entries(groupings).map(([category, indices]) => [
+          category,
+          (indices as number[]).map((index: number) => tasks[index].id)
+        ])
+      );
+      setGroupedTasks(groupedTaskIds);
+      // Store grouped tasks in local storage
+      localStorage.setItem('groupedTasks', JSON.stringify(groupedTaskIds));
     } catch (error) {
       console.error('Error grouping tasks:', error);
       toast({ title: "Error", description: "Failed to group tasks. Please try again.", variant: "destructive" });
@@ -327,8 +341,9 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
           tasks={tasks}
           onToggleTask={handleToggleTask}
           onUpdateTaskPriority={handleUpdateTaskPriority}
-          onEditTask={handleEditTask}
+          onEditTask={setEditingTask}
           onDeleteTask={handleDeleteTask}
+          onUpdateTask={handleUpdateTask}
         />
       ) : (
         <ul className="space-y-3">
