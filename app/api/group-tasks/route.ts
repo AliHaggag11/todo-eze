@@ -5,10 +5,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { tasks } = await req.json();
-    console.log('Received tasks:', tasks); // Add this log
+    const body = await req.json();
+    console.log('Received request body:', body);
+
+    const { tasks } = body;
+    console.log('Extracted tasks:', tasks);
 
     if (!Array.isArray(tasks) || tasks.length === 0) {
+      console.log('Invalid or empty tasks array');
       return NextResponse.json({ error: 'Invalid or empty tasks array' }, { status: 400 });
     }
 
@@ -22,10 +26,12 @@ export async function POST(req: Request) {
       For example: {"Work": [0, 2], "Personal": [1, 3], "Health": [4]}
     `;
 
+    console.log('Generated prompt:', prompt);
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const groupings = JSON.parse(response.text());
-    console.log('Generated groupings:', groupings); // Add this log
+    console.log('Generated groupings:', groupings);
     return NextResponse.json(groupings);
   } catch (error) {
     console.error('Error in task grouping:', error);
