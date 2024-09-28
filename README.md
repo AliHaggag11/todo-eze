@@ -10,6 +10,7 @@ This project is a real-time collaborative todo list application built with Next.
 - Real-time task updates
 - Create, read, update, and delete (CRUD) operations for tasks
 - Push notifications for task changes (add, edit, delete)
+- AI-assisted task suggestions using Google's Gemini API
 - Responsive design for mobile and desktop
 - Dark mode support
 - Progressive Web App (PWA) functionality
@@ -34,6 +35,9 @@ This project is a real-time collaborative todo list application built with Next.
 ### Push Notifications
 - **web-push**: A library for implementing Web Push protocol.
 
+### AI Integration
+- **Google Gemini API**: Used for generating AI-assisted task suggestions.
+
 ## Getting Started
 
 1. Clone the repository
@@ -45,6 +49,7 @@ This project is a real-time collaborative todo list application built with Next.
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
    VAPID_PRIVATE_KEY=your_vapid_private_key
+   GEMINI_API_KEY=your_gemini_api_key
    ```
 4. Run the development server: `npm run dev`
 5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

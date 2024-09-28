@@ -5,7 +5,7 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Database } from '@/lib/database.types'
 import { useToast } from "@/hooks/use-toast"
-import { PlusIcon, TrashIcon, PencilIcon, Loader2 } from 'lucide-react'
+import { PlusIcon, TrashIcon, PencilIcon, Loader2, Sparkles } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [userId, setUserId] = useState<string | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [aiSuggestion, setAiSuggestion] = useState('')
+  const [isAiLoading, setIsAiLoading] = useState(false)
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
 
@@ -205,6 +207,27 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     }
   }
 
+  const getAISuggestion = async () => {
+    setIsAiLoading(true)
+    try {
+      const response = await fetch('/api/ai-assist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: "Suggest a task based on: " + tasks.map(t => t.title).join(", ") })
+      });
+      const data = await response.json();
+      if (data.result) {
+        setAiSuggestion(data.result);
+        setNewTask(data.result);
+      }
+    } catch (error) {
+      console.error('Error getting AI suggestion:', error);
+      toast({ title: "Error", description: "Failed to get AI suggestion. Please try again.", variant: "destructive" });
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -227,8 +250,26 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
           <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
             <PlusIcon className="w-5 h-5 mr-1" /> Add
           </Button>
+          <Button 
+            type="button" 
+            onClick={getAISuggestion} 
+            disabled={isAiLoading}
+            className="bg-purple-500 hover:bg-purple-600"
+          >
+            {isAiLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Sparkles className="w-5 h-5 mr-1" />
+            )}
+            AI Suggest
+          </Button>
         </div>
       </form>
+      {aiSuggestion && (
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          AI Suggestion: {aiSuggestion}
+        </p>
+      )}
       {tasks.length === 0 ? (
         <p className="text-center text-gray-700 dark:text-gray-300 mt-6">No tasks yet. Add one to get started!</p>
       ) : (
