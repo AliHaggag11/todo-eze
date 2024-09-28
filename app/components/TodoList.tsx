@@ -147,7 +147,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
-        sendPushNotification('New Task Added', `Task: ${newTask.trim()}`)
       }
     }
   }
@@ -191,7 +190,6 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         toast({ title: "Error", description: "Failed to update task. Please try again.", variant: "destructive" })
       } else {
         setEditingTask(null)
-        sendPushNotification('Task Updated', `Task updated to: ${editingTask.title}`)
       }
     }
   }
