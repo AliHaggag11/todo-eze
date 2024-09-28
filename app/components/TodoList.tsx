@@ -283,26 +283,26 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       ) : (
         <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex items-start justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
-              <div className="flex items-start space-x-3 flex-grow min-w-0">
+            <li key={task.id} className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-md transition-all hover:shadow-md">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
                 <input
                   type="checkbox"
                   checked={task.is_complete}
                   onChange={() => handleToggleTask(task)}
-                  className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
                 <span className={`${
                   task.is_complete ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
-                } text-lg break-words`}>
+                } text-lg truncate`}>
                   {task.title}
                 </span>
               </div>
-              <div className="flex space-x-2 ml-2 flex-shrink-0">
+              <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
                 <Select
                   value={task.priority}
                   onValueChange={(value: 'low' | 'medium' | 'high') => handleUpdateTaskPriority(task.id, value)}
                 >
-                  <SelectTrigger className="w-[100px]">
+                  <SelectTrigger className="w-[90px]">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -316,7 +316,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                     <Button
                       onClick={() => handleEditTask(task)}
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                     >
                       <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
@@ -341,7 +341,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
                 <Button
                   onClick={() => handleDeleteTask(task.id)}
                   variant="destructive"
-                  size="sm"
+                  size="icon"
                   className="hover:bg-red-600"
                 >
                   <TrashIcon className="w-4 h-4" />
