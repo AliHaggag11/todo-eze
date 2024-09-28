@@ -14,12 +14,6 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/app/components/ui/dialog"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/app/components/ui/tooltip"
 
 interface TodoListProps {
   pushSubscription: PushSubscription | null;
