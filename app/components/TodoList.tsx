@@ -94,9 +94,13 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      if (!userId) return; // Don't fetch if there's no user ID
+      if (!userId) {
+        console.log('No userId, skipping task fetch');
+        return;
+      }
 
       setIsLoading(true);
+      console.log('Fetching tasks...');
       try {
         const { data, error } = await supabase
           .from('tasks')
@@ -105,6 +109,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
 
         if (error) throw error;
 
+        console.log('Fetched tasks:', data);
         setTasks(data as Task[]);
         
         // Retrieve grouped tasks from local storage
@@ -117,6 +122,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         toast({ title: "Error", description: "Failed to fetch tasks. Please try again.", variant: "destructive" });
       } finally {
         setIsLoading(false);
+        console.log('Task fetching complete');
       }
     };
 
@@ -156,6 +162,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       .subscribe();
 
     return () => {
+      console.log('Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, [userId, supabase, sendPushNotification, toast, tasks]);
@@ -314,9 +321,12 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+        <span className="ml-2">Loading tasks...</span>
       </div>
     )
   }
+
+  console.log('Rendering TodoList with tasks:', tasks);
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
