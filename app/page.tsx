@@ -96,7 +96,7 @@ export default function Home() {
               </Button>
             </div>
             {userName && (
-              <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
+              <p className="text-lg text-blue-400 dark:text-blue-300 mt-3 font-medium">
                 {greeting}, {userName}
               </p>
             )}
