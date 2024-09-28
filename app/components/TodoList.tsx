@@ -87,7 +87,12 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      setUserId(user?.id || null)
+      if (user) {
+        setUserId(user.id)
+        console.log('User ID set:', user.id)
+      } else {
+        console.log('No user found')
+      }
     }
     fetchUser()
   }, [supabase.auth])
