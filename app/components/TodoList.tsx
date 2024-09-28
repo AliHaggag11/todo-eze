@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Task } from '@/lib/types'
 import { Button } from '@/app/components/ui/button'
@@ -26,6 +26,36 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const supabase = createClientComponentClient<Database>()
   const { toast } = useToast()
+
+  const sendPushNotification = useCallback(async (title: string, body: string) => {
+    if (pushSubscription) {
+      try {
+        console.log('Sending push notification', { title, body, pushSubscription })
+        const response = await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            subscription: pushSubscription,
+            title,
+            body,
+            url: window.location.origin,
+          }),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+        }
+        const result = await response.json()
+        console.log('Push notification result', result)
+      } catch (error) {
+        console.error('Error sending push notification:', error);
+      }
+    } else {
+      console.log('Push subscription not available')
+    }
+  }, [pushSubscription]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -81,37 +111,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
         supabase.removeChannel(channel)
       }
     }
-  }, [userId, supabase])
-
-  const sendPushNotification = async (title: string, body: string) => {
-    if (pushSubscription) {
-      try {
-        console.log('Sending push notification', { title, body, pushSubscription })
-        const response = await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            subscription: pushSubscription,
-            title,
-            body,
-            url: window.location.origin,
-          }),
-        });
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-        }
-        const result = await response.json()
-        console.log('Push notification result', result)
-      } catch (error) {
-        console.error('Error sending push notification:', error);
-      }
-    } else {
-      console.log('Push subscription not available')
-    }
-  };
+  }, [userId, supabase, sendPushNotification])
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()

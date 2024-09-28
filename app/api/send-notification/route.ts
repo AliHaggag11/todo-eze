@@ -1,23 +1,14 @@
 import webPush from 'web-push';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY!;
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase environment variables');
-}
 
 webPush.setVapidDetails(
   'mailto:your-email@example.com',
   publicVapidKey,
   privateVapidKey
 );
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export async function POST(req: Request) {
   try {
