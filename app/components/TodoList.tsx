@@ -179,7 +179,7 @@ export default function TodoList() {
                     <Input
                       value={editingTask?.title || ''}
                       onChange={(e) => setEditingTask(prev => prev ? {...prev, title: e.target.value} : null)}
-                      className="mb-4 text-gray-900 dark:text-gray-100 placeholder-gray-600 dark:placeholder-gray-400"
+                      className="mb-4 text-gray-900 dark:text-gray-600 placeholder-gray-600 dark:placeholder-gray-400"
                     />
                     <DialogClose asChild>
                       <Button type="submit" className="w-full">Update Task</Button>
