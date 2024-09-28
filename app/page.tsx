@@ -15,11 +15,15 @@ const queryClient = new QueryClient()
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [userName, setUserName] = useState<string | null>(null)
   const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
+      if (session?.user) {
+        setUserName(session.user.user_metadata.full_name || session.user.email)
+      }
       setIsLoading(false)
     })
 
@@ -27,6 +31,9 @@ export default function Home() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session?.user) {
+        setUserName(session.user.user_metadata.full_name || session.user.email)
+      }
       setIsLoading(false)
     })
 
@@ -53,23 +60,30 @@ export default function Home() {
         <Auth />
       ) : (
         <div className="container mx-auto px-4">
-          <header className="flex justify-between items-center my-8">
-            <h1 className="text-3xl font-bold text-white dark:text-white">Collaborative Todo List</h1>
-            <Button 
-              onClick={handleLogout} 
-              variant="outline"
-              disabled={isLoading}
-              className="ml-4"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging out...
-                </>
-              ) : (
-                'Logout'
-              )}
-            </Button>
+          <header className="flex flex-col items-start my-8">
+            <div className="flex justify-between items-center w-full">
+              <h1 className="text-3xl font-bold text-black dark:text-white">Collaborative Todo List</h1>
+              <Button 
+                onClick={handleLogout} 
+                variant="outline"
+                disabled={isLoading}
+                className="ml-4"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging out...
+                  </>
+                ) : (
+                  'Logout'
+                )}
+              </Button>
+            </div>
+            {userName && (
+              <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
+                Hello, {userName}
+              </p>
+            )}
           </header>
           <TodoList />
         </div>
