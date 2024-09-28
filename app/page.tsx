@@ -64,8 +64,8 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-500 dark:text-gray-400" />
       </div>
     )
   }
@@ -75,11 +75,11 @@ export default function Home() {
       {!session ? (
         <Auth />
       ) : (
-        <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
           <div className="container mx-auto px-4 py-8">
             <header className="flex flex-col items-start mb-8">
               <div className="flex justify-between items-center w-full">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Collaborative Todo List</h1>
+                <h1 className="text-3xl font-bold">Collaborative Todo List</h1>
                 <Button 
                   onClick={handleLogout} 
                   variant="outline"
