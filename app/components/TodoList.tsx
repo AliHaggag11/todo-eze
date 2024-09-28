@@ -249,14 +249,18 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }
 
   const groupTasks = async () => {
-    setIsGrouping(true)
+    setIsGrouping(true);
     try {
       const response = await fetch('/api/group-tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tasks }),
+        body: JSON.stringify({ tasks: tasks }), // Ensure we're sending the tasks array
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const groupings = await response.json();
+      console.log('Received groupings:', groupings); // Add this log
       setGroupedTasks(groupings);
     } catch (error) {
       console.error('Error grouping tasks:', error);
