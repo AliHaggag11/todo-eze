@@ -188,24 +188,24 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   }
 
   const handleDeleteTask = async (taskId: string) => {
-    // Optimistically update local state
-    setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
 
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', taskId);
+      if (error) {
+        throw error;
+      }
 
-    if (error) {
+      // We don't need to update the local state here.
+      // The real-time subscription will handle updating the UI for all clients.
+      console.log('Task deleted successfully');
+    } catch (error) {
       console.error('Error deleting task:', error);
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" });
-      // Revert the optimistic update
-      fetchTasks();
-    } else {
-      console.log('Task deleted successfully');
-      // The real-time subscription will handle updating other clients
     }
-  }
+  };
 
   const handleEditTask = (task: Task) => {
     setEditingTask(task)
