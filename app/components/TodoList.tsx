@@ -30,7 +30,9 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const sendPushNotification = useCallback(async (title: string, body: string) => {
     if (pushSubscription) {
       try {
-        console.log('Sending push notification', { title, body, pushSubscription })
+        console.log('Attempting to send push notification', { title, body });
+        console.log('Push subscription:', JSON.stringify(pushSubscription));
+        
         const response = await fetch('/api/send-notification', {
           method: 'POST',
           headers: {
@@ -43,19 +45,32 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             url: window.location.origin,
           }),
         });
+
         if (!response.ok) {
           const errorText = await response.text();
+          console.error('Push notification request failed:', response.status, errorText);
           throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
         }
-        const result = await response.json()
-        console.log('Push notification result', result)
+
+        const result = await response.json();
+        console.log('Push notification sent successfully:', result);
       } catch (error) {
         console.error('Error sending push notification:', error);
+        toast({ 
+          title: "Notification Error", 
+          description: "Failed to send push notification. Please try again.", 
+          variant: "destructive" 
+        });
       }
     } else {
-      console.log('Push subscription not available')
+      console.log('Push subscription not available');
+      toast({ 
+        title: "Notification Error", 
+        description: "Push subscription is not available. Please enable notifications.", 
+        variant: "destructive" 
+      });
     }
-  }, [pushSubscription]);
+  }, [pushSubscription, toast]);
 
   useEffect(() => {
     const fetchUser = async () => {

@@ -13,11 +13,17 @@ webPush.setVapidDetails(
 export async function POST(req: Request) {
   try {
     const { subscription, title, body, url } = await req.json();
-    console.log('Received notification request', { subscription, title, body, url });
+    console.log('Received notification request', { title, body, url });
+    console.log('Received subscription:', JSON.stringify(subscription));
 
     if (!subscription) {
       throw new Error('No subscription provided');
     }
+
+    console.log('VAPID keys:', { 
+      public: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, 
+      private: process.env.VAPID_PRIVATE_KEY ? 'Set' : 'Not set' 
+    });
 
     // Send notification to the specific subscription
     await webPush.sendNotification(
