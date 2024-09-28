@@ -104,19 +104,28 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             console.log('Change received!', payload)
             if (payload.eventType === 'INSERT') {
               setTasks(currentTasks => [payload.new as Task, ...currentTasks])
-              await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`)
+              // Only send notification if the new task wasn't created by the current user
+              if (payload.new.user_id !== userId) {
+                await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`)
+              }
             } else if (payload.eventType === 'UPDATE') {
               setTasks(currentTasks =>
                 currentTasks.map(task =>
                   task.id === payload.new.id ? (payload.new as Task) : task
                 )
               )
-              await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`)
+              // Only send notification if the task wasn't updated by the current user
+              if (payload.old.user_id !== userId) {
+                await sendPushNotification('Task Updated', `Task "${(payload.new as Task).title}" was updated`)
+              }
             } else if (payload.eventType === 'DELETE') {
               setTasks(currentTasks =>
                 currentTasks.filter(task => task.id !== payload.old.id)
               )
-              await sendPushNotification('Task Deleted', `A task has been deleted`)
+              // Only send notification if the task wasn't deleted by the current user
+              if (payload.old.user_id !== userId) {
+                await sendPushNotification('Task Deleted', `A task has been deleted`)
+              }
             }
           }
         )
