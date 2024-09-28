@@ -1,32 +1,56 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/app/components/ui/toaster";
+'use client'
 
-const inter = Inter({ subsets: ["latin"] });
+import { useState, useEffect } from 'react'
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Toaster } from "@/app/components/ui/toaster"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Database } from '@/lib/database.types'
+import DotPattern from '@/app/components/magicui/dot-pattern'
 
-export const metadata: Metadata = {
-  title: "Collaborative Todo List",
-  description: "A real-time collaborative todo list application",
-  manifest: "/manifest.json",
-  themeColor: "#000000",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-};
+const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const supabase = createClientComponentClient<Database>()
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsLoggedIn(!!session)
+    }
+
+    checkSession()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
+
   return (
     <html lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-      </head>
-      <body className={inter.className}>
-        {children}
+      <body className={`${inter.className} relative`}>
+        {isLoggedIn && (
+          <DotPattern
+            width={16}
+            height={16}
+            cx={0.5}
+            cy={0.5}
+            cr={0.5}
+            className="absolute inset-0 h-full w-full text-gray-200 dark:text-gray-800 opacity-50 -z-10"
+          />
+        )}
+        <div className="relative z-10">
+          {children}
+        </div>
         <Toaster />
       </body>
     </html>
-  );
+  )
 }
