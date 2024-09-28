@@ -7,6 +7,10 @@ const privateVapidKey = process.env.VAPID_PRIVATE_KEY!;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
 webPush.setVapidDetails(
   'mailto:your-email@example.com',
   publicVapidKey,
@@ -27,7 +31,11 @@ export async function POST(req: Request) {
       .select('*');
 
     if (error) {
-      throw new Error('Failed to fetch push subscriptions');
+      throw new Error('Failed to fetch push subscriptions: ' + error.message);
+    }
+
+    if (!subscriptions) {
+      throw new Error('No subscriptions found');
     }
 
     // Send notifications to all subscribed clients
@@ -37,10 +45,10 @@ export async function POST(req: Request) {
           sub.subscription,
           JSON.stringify({ title, body, url })
         );
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error sending push notification:', error);
         // If the subscription is invalid, remove it from the database
-        if ((error as any).statusCode === 410) {
+        if (error.statusCode === 410) {
           await supabase
             .from('push_subscriptions')
             .delete()
