@@ -156,9 +156,7 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
       setTasks(currentTasks =>
         currentTasks.filter(task => task.id !== payload.old.id)
       );
-      if (payload.old.user_id !== userId) {
-        await sendPushNotification('Task Deleted', `A task has been deleted`);
-      }
+      await sendPushNotification('Task Deleted', `A task has been deleted`);
     }
   };
 
@@ -200,7 +198,9 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
     if (error) {
       toast({ title: "Error", description: "Failed to delete task. Please try again.", variant: "destructive" })
     } else {
-      sendPushNotification('Task Deleted', `A task has been deleted`)
+      // Remove the task from the local state immediately
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+      // The real-time update will handle the notification
     }
   }
 
