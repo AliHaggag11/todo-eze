@@ -27,27 +27,25 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-      <div className="relative w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-        <Ripple className="absolute inset-0 z-0" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-6 text-center">Welcome to Todo List</h1>
-          <p className="text-gray-400 mb-8 text-center">Sign in to manage your tasks</p>
-          <Button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded flex items-center justify-center"
-          >
-            {loading ? (
-              'Loading...'
-            ) : (
-              <>
-                <GithubIcon className="w-5 h-5 mr-2" />
-                Sign in with GitHub
-              </>
-            )}
-          </Button>
-        </div>
+    <div className="relative flex items-center justify-center min-h-screen bg-gray-900 text-white overflow-hidden">
+      <Ripple className="absolute inset-0 z-0" />
+      <div className="w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-lg z-10">
+        <h1 className="text-3xl font-bold mb-6 text-center">Welcome to Todo List</h1>
+        <p className="text-gray-400 mb-8 text-center">Sign in to manage your tasks</p>
+        <Button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded flex items-center justify-center"
+        >
+          {loading ? (
+            'Loading...'
+          ) : (
+            <>
+              <GithubIcon className="w-5 h-5 mr-2" />
+              Sign in with GitHub
+            </>
+          )}
+        </Button>
       </div>
     </div>
   )
