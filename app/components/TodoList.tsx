@@ -109,10 +109,8 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
             console.log('Change received!', payload)
             if (payload.eventType === 'INSERT') {
               setTasks(currentTasks => [payload.new as Task, ...currentTasks])
-              // Only send notification if the new task wasn't created by the current user
-              if (payload.new.user_id !== userId) {
-                await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`)
-              }
+              // Send notification for all new tasks, including those created by the current user
+              await sendPushNotification('New Task Added', `Task: ${(payload.new as Task).title}`)
             } else if (payload.eventType === 'UPDATE') {
               setTasks(currentTasks =>
                 currentTasks.map(task =>
@@ -145,13 +143,17 @@ export default function TodoList({ pushSubscription }: TodoListProps) {
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newTask.trim() && userId) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .insert({ title: newTask.trim(), user_id: userId })
+        .select()
+        .single()
       if (error) {
         toast({ title: "Error", description: "Failed to add task. Please try again.", variant: "destructive" })
       } else {
         setNewTask('')
+        // Send notification for task creation
+        await sendPushNotification('New Task Added', `Task: ${data.title}`)
       }
     }
   }
