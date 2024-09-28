@@ -12,12 +12,17 @@ export async function POST(req: Request) {
 
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    const result = await model.generateContent(`Based on these tasks: ${prompt}, suggest a short, concise new task (max 10 words).`);
+    const result = await model.generateContent(`
+      Given these tasks: ${prompt}
+      Suggest a new, different task that might logically come next or complement the existing tasks.
+      The suggestion should be short (max 10 words) and not repeat or rephrase existing tasks.
+      Focus on potential follow-up actions or related but distinct tasks.
+    `);
     const response = await result.response;
     const text = response.text().trim();
     return NextResponse.json({ result: text });
-  } catch (error) {
-    console.error('Error calling Gemini API:', error);
-    return NextResponse.json({ error: 'Failed to process AI request' }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('Error in AI assist:', error);
+    return NextResponse.json({ error: 'Failed to generate AI suggestion' }, { status: 500 });
   }
 }
